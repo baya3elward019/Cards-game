@@ -2,21 +2,21 @@
    Colours and fonts are the variables below. Monster art colours follow each card's --c. */
 :root {
   color-scheme: dark;
-  --table: #143634; --table-deep: #081a1a; --mat: #0e2827; --panel: #16393a; --line: #6f6238; --brass: #d8b468; --brass-2: #a8803a;
+  --table: #143634; --table-deep: #081a1a; --mat: #0e2827; --mat-hi: #1a4643; --glow: #1d4a46; --panel: #16393a; --mote: #d8b468; --line: #6f6238; --brass: #d8b468; --brass-2: #a8803a;
   --fg: #f1e8d2; --muted: #a3b9b2; --parch: #eee3c8; --ink: #201b12; --art: #0b1718; --foe: #7d3b46;
   --atk: #c2470f; --dfn: #1c5fa6; --good: #6fcf8e; --bad: #f08a7c;
   --display: 'Reem Kufi', 'Segoe UI', Tahoma, sans-serif; --body: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; }
-body { background: radial-gradient(90% 60% at 50% 0%, #1d4a46, transparent 70%), repeating-linear-gradient(45deg, #ffffff05 0 2px, transparent 2px 9px), var(--table-deep); background-attachment: fixed; color: var(--fg); font: 15px/1.6 var(--body); min-height: 100vh; padding-inline: 16px; padding-block: 14px 28px; overflow-x: hidden; }
+body { transition: background-color .8s; background: radial-gradient(90% 60% at 50% 0%, var(--glow), transparent 70%), repeating-linear-gradient(45deg, #ffffff05 0 2px, transparent 2px 9px), var(--table-deep); background-attachment: fixed; color: var(--fg); font: 15px/1.6 var(--body); min-height: 100vh; padding-inline: 16px; padding-block: 14px 28px; overflow-x: hidden; }
 h1, h2, h3, h4 { font-family: var(--display); margin: 0; text-wrap: balance; font-weight: 600; }
 p { margin: 0; }
 button { font: inherit; color: inherit; cursor: pointer; }
 :focus-visible { outline: 2px solid var(--brass); outline-offset: 2px; }
 .muted { color: var(--muted); }
 
-.btn { background: linear-gradient(#1d4646, #15393a); border: 1px solid var(--line); border-radius: 8px; padding: 8px 16px; font-weight: 700; box-shadow: 0 2px 0 #0006; transition: transform .1s, border-color .15s; }
+.btn { background: linear-gradient(#ffffff14, #0000), var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 8px 16px; font-weight: 700; box-shadow: 0 2px 0 #0006; transition: transform .1s, border-color .15s; }
 .btn:hover { border-color: var(--brass); transform: translateY(-1px); }
 .btn:active { transform: translateY(1px); box-shadow: none; }
 .btn.primary { background: linear-gradient(#ecc97c, var(--brass-2)); color: var(--ink); border-color: #f3d896; }
@@ -77,6 +77,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .a-blink { animation: blink 4.2s; } @keyframes blink { 0%, 93%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
 .a-flick { transform-origin: 50% 100% !important; animation: flick .45s alternate; } @keyframes flick { to { transform: scale(1.06, 1.16) skewX(4deg); } }
 .a-pulse { animation: glow 1.6s alternate; } @keyframes glow { to { opacity: .3; } }
+.a-hang { transform-origin: 50% 0 !important; animation: sway 3s alternate; }
 .a-sway { transform-origin: 50% 100% !important; animation: sway 2.8s alternate; } @keyframes sway { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
 .a-spin { transform-box: view-box !important; transform-origin: 50% 50% !important; animation: spin 22s linear; animation-timing-function: linear !important; } @keyframes spin { to { transform: rotate(360deg); } }
 .a-rise { animation: rise 2.6s linear; animation-timing-function: linear !important; } @keyframes rise { from { transform: translateY(6px); opacity: 0; } 20% { opacity: 1; } to { transform: translateY(-26px); opacity: 0; } }
@@ -94,7 +95,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .fan { width: 132px; margin-inline: -16px; transform-origin: 50% 130%; filter: drop-shadow(0 8px 14px #000a); }
 .fan.f0 { transform: rotate(-13deg); } .fan.f1 { transform: translateY(-14px) scale(1.06); z-index: 1; } .fan.f2 { transform: rotate(13deg); }
 .menu-list { display: grid; gap: 10px; }
-.mbtn { display: grid; gap: 2px; text-align: start; background: linear-gradient(100deg, #1c4544, #14373a); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; box-shadow: 0 3px 0 #0005; transition: transform .12s, border-color .15s; }
+.mbtn { display: grid; gap: 2px; text-align: start; background: linear-gradient(100deg, #ffffff12, #0000), var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 14px 18px; box-shadow: 0 3px 0 #0005; transition: transform .12s, border-color .15s; }
 .mbtn:hover { border-color: var(--brass); transform: translateY(-2px); }
 .mbtn b { font: 600 20px var(--display); color: var(--brass); }
 .mbtn span { color: var(--muted); font-size: 13.5px; }
@@ -120,7 +121,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .game { grid-template-columns: minmax(0, 640px) minmax(0, 300px); justify-content: center; grid-template-rows: auto auto auto 1fr; grid-template-areas: 'bar bar' 'table coach' 'table detail' 'table log'; }
   .game.duel { grid-template-rows: auto auto 1fr; grid-template-areas: 'bar bar' 'table detail' 'table log'; }
 }
-.board { display: grid; gap: 6px; position: relative; background: radial-gradient(circle at 50% 50%, #1a4643, var(--mat) 62%); border: 1px solid var(--brass-2); border-radius: 14px; padding: 10px; box-shadow: inset 0 0 0 3px #0005, inset 0 0 40px #000a, 0 12px 30px #0008; }
+.board { display: grid; gap: 6px; position: relative; background: radial-gradient(circle at 50% 50%, var(--mat-hi), var(--mat) 62%); border: 1px solid var(--brass-2); border-radius: 14px; padding: 10px; box-shadow: inset 0 0 0 3px #0005, inset 0 0 40px #000a, 0 12px 30px #0008; }
 .board::before { content: ''; position: absolute; inset: 0; margin: auto; width: 46%; aspect-ratio: 1; border-radius: 50%; border: 1px solid #d8b46826; background: repeating-radial-gradient(circle, transparent 0 13px, #d8b46812 13px 14px); pointer-events: none; }
 .board > * { position: relative; }
 .zones { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
@@ -147,6 +148,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .phasebar span { padding: 1px 10px; border-radius: 999px; color: var(--muted); border: 1px solid #d8b46830; background: #0005; }
 .phasebar .on { background: linear-gradient(#ecc97c, var(--brass-2)); color: var(--ink); font-weight: 800; border-color: #f3d896; box-shadow: 0 0 10px #d8b46880; }
 .phasebar .turn { color: var(--fg); font-weight: 700; border: 0; background: none; }
+.phasebar .arena { color: var(--mote); border-color: var(--mote); font-weight: 700; }
 .actions { min-height: 82px; display: grid; gap: 6px; align-content: center; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; box-shadow: 0 4px 14px #0006; }
 .ask { font-weight: 700; color: var(--good); }
 .result b { font: 600 22px var(--display); margin-inline-end: 8px; }
@@ -176,19 +178,48 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .mgrid { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
 .mgrid .card { width: 88px; cursor: pointer; }
 
+/* ---- arenas: each duel (or arena spell) repaints the table and its drifting particles ---- */
+body[data-arena='fire'] { --table-deep: #170806; --glow: #7a2a14; --mat: #2a100b; --mat-hi: #6a2a14; --panel: #3a1810; --table: #3a1810; --mote: #ff9a3c; }
+body[data-arena='water'] { --table-deep: #050f22; --glow: #134a86; --mat: #0a1f3d; --mat-hi: #174e8a; --panel: #102c50; --table: #102c50; --mote: #8fd0ff; }
+body[data-arena='earth'] { --table-deep: #120f08; --glow: #5a4520; --mat: #221b0f; --mat-hi: #56431f; --panel: #2f2616; --table: #2f2616; --mote: #b7d16a; }
+body[data-arena='wind'] { --table-deep: #07160f; --glow: #1f6a45; --mat: #0f2a1e; --mat-hi: #237048; --panel: #153826; --table: #153826; --mote: #c9f5dc; }
+body[data-arena='light'] { --table-deep: #171307; --glow: #86701f; --mat: #2a2410; --mat-hi: #857025; --panel: #3a3216; --table: #3a3216; --mote: #fff1a8; }
+body[data-arena='dark'] { --table-deep: #0a0614; --glow: #46227c; --mat: #170e2a; --mat-hi: #4a267e; --panel: #23153c; --table: #23153c; --mote: #b98cff; }
+#app { position: relative; z-index: 1; }
+#bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+#bg i { position: absolute; left: var(--x); top: var(--y); width: calc(5px * var(--s)); height: calc(5px * var(--s)); border-radius: 50%; background: var(--mote); opacity: 0; animation: p-twinkle var(--dur) var(--del) infinite ease-in-out; }
+@keyframes p-twinkle { 50% { opacity: .55; transform: scale(1.6); } }
+@keyframes p-rise { from { transform: translateY(105vh); opacity: 0; } 15%, 80% { opacity: .75; } to { transform: translateY(-8vh) translateX(4vw); opacity: 0; } }
+@keyframes p-fall { from { transform: translateY(-8vh) rotate(0); opacity: 0; } 15%, 85% { opacity: .7; } to { transform: translateY(105vh) translateX(-8vw) rotate(540deg); opacity: 0; } }
+@keyframes p-streak { from { transform: translateX(-30vw); opacity: 0; } 20%, 70% { opacity: .5; } to { transform: translateX(130vw); opacity: 0; } }
+body[data-arena='fire'] #bg i { top: 0; animation-name: p-rise; animation-timing-function: linear; box-shadow: 0 0 8px 2px #ff6a2c; }
+body[data-arena='water'] #bg i { top: 0; animation-name: p-rise; animation-timing-function: linear; background: none; border: 1.5px solid var(--mote); width: calc(11px * var(--s)); height: calc(11px * var(--s)); }
+body[data-arena='earth'] #bg i { top: 0; animation-name: p-fall; animation-timing-function: linear; border-radius: 0 80% 0 80%; width: calc(10px * var(--s)); height: calc(10px * var(--s)); }
+body[data-arena='wind'] #bg i { left: 0; animation-name: p-streak; animation-timing-function: linear; animation-duration: calc(var(--dur) * .45); width: calc(70px * var(--s)); height: 2px; border-radius: 2px; background: linear-gradient(90deg, transparent, var(--mote)); }
+body[data-arena='light'] #bg i { box-shadow: 0 0 10px 3px #ffe28a; }
+body[data-arena='dark'] #bg i { top: 0; animation-name: p-rise; animation-duration: calc(var(--dur) * 1.6); filter: blur(2px); width: calc(12px * var(--s)); height: calc(12px * var(--s)); }
+/* strong monsters (level 5+) get a moving foil sheen */
+.card.foil .cf::after { content: ''; position: absolute; inset: 0; pointer-events: none; background: linear-gradient(115deg, transparent 32%, #fff6 46%, #9ff5 50%, #f9f5 54%, transparent 68%); background-size: 300% 100%; animation: foil 4s linear infinite; animation-delay: var(--t, 0s); }
+@keyframes foil { from { background-position: 150% 0; } to { background-position: -150% 0; } }
+.card.own-down.foil .cf::after, .back.foil .cf::after { display: none; }
+
 /* ---- effects layer ---- */
+.ring { position: absolute; width: 150px; height: 150px; margin: -75px; border-radius: 50%; border: 4px solid var(--c); box-shadow: 0 0 24px var(--c), inset 0 0 24px var(--c); animation: ring .7s ease-out forwards; }
+@keyframes ring { from { transform: scale(.15); opacity: 1; } to { transform: scale(1.25); opacity: 0; } }
+.flash { position: absolute; inset: 0; background: radial-gradient(circle, var(--c), transparent 70%); animation: flash .9s ease-out forwards; }
+@keyframes flash { from { opacity: .75; } to { opacity: 0; } }
 #fx { position: fixed; inset: 0; pointer-events: none; z-index: 30; overflow: hidden; }
 .float { direction: ltr; position: absolute; transform: translate(-50%, 0); font: 800 26px var(--body); animation: floatup 1.3s ease-out forwards; text-shadow: 0 2px 6px #000; }
 .float.dmg { color: var(--bad); } .float.heal { color: var(--good); }
 @keyframes floatup { to { transform: translate(-50%, -50px); opacity: 0; } }
 .fx-ghost { position: fixed !important; margin: 0; animation: burn .65s ease-in forwards; }
 @keyframes burn { 25% { filter: brightness(3) sepia(1) saturate(4); transform: scale(1.1); } to { filter: brightness(4) blur(6px); transform: scale(.5) rotate(18deg) translateY(-30px); opacity: 0; } }
-.burst { position: absolute; width: 130px; height: 130px; margin: -65px; background: radial-gradient(circle, #fff 8%, #ffe08a 28%, #ff8a3c 46%, transparent 66%); clip-path: polygon(50% 0, 60% 34%, 96% 22%, 68% 48%, 100% 64%, 64% 62%, 60% 100%, 46% 66%, 12% 92%, 34% 56%, 0 42%, 36% 38%); animation: burst .45s ease-out forwards; }
+.burst { position: absolute; width: 130px; height: 130px; margin: -65px; background: radial-gradient(circle, #fff 8%, color-mix(in srgb, var(--c, #ff8a3c) 45%, #fff) 28%, var(--c, #ff8a3c) 46%, transparent 66%); clip-path: polygon(50% 0, 60% 34%, 96% 22%, 68% 48%, 100% 64%, 64% 62%, 60% 100%, 46% 66%, 12% 92%, 34% 56%, 0 42%, 36% 38%); animation: burst .45s ease-out forwards; }
 @keyframes burst { from { transform: scale(.2) rotate(-20deg); } to { transform: scale(1.5) rotate(15deg); opacity: 0; } }
 .showcase { position: absolute; left: 50%; top: 42%; width: min(210px, 56vw); margin-inline-start: max(-105px, -28vw); animation: show 1.25s ease forwards; filter: drop-shadow(0 0 30px #fff7); }
 @keyframes show { from { transform: translateY(-40%) scale(.3); opacity: 0; } 18%, 75% { transform: translateY(-50%) scale(1); opacity: 1; } to { transform: translateY(-60%) scale(1.15); opacity: 0; } }
-.banner { position: absolute; inset-inline: 0; top: 36%; display: grid; justify-items: center; padding-block: 10px; background: linear-gradient(90deg, transparent, #0d2a29ee 25% 75%, transparent); border-block: 1px solid var(--brass); animation: banner 1.3s ease forwards; }
+.banner { position: absolute; inset-inline: 0; top: 36%; display: grid; justify-items: center; padding-block: 10px; background: linear-gradient(90deg, transparent, var(--mat) 25% 75%, transparent); border-block: 1px solid var(--brass); animation: banner 1.3s ease forwards; }
 .banner span { font: 700 34px/1.2 var(--display); color: var(--brass); } .banner small { color: var(--muted); letter-spacing: .1em; }
 .banner.foe span { color: var(--bad); }
 @keyframes banner { from { transform: scaleY(0); opacity: 0; } 15%, 70% { transform: none; opacity: 1; } to { transform: translateX(8%); opacity: 0; } }
-@media (prefers-reduced-motion: reduce) { .mon *, .card.pick .cf, .card.enter, .float { animation: none !important; } .slot, .btn, .mbtn { transition: none; } }
+@media (prefers-reduced-motion: reduce) { #bg i, .card.foil .cf::after { animation: none !important; } .mon *, .card.pick .cf, .card.enter, .float { animation: none !important; } .slot, .btn, .mbtn { transition: none; } }

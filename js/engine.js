@@ -6,7 +6,7 @@
   SD.def = c => SD.CARDS[c.id];
   SD.shuffle = a => { for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
   SD.tributes = d => d.lvl >= 7 ? 2 : d.lvl >= 5 ? 1 : 0;
-  SD.START_LP = 8000; SD.HAND_LIMIT = 6;
+  SD.START_LP = 8000; SD.HAND_LIMIT = 6; SD.FIELD_BONUS = 300;
 
   SD.Game = class {
     /* o.decks: two arrays of card ids, LAST element is the top of the deck */
@@ -25,8 +25,11 @@
     onField(c) { const w = this.where(c); return w === 'm' || w === 'st'; }
     /* base ATK + permanent change (mod) + until-end-of-turn change (tmp) + equips + auras */
     atkOf(c) {
-      let a = SD.def(c).atk + (c.mod || 0) + (c.tmp || 0); const P = this.P[c.owner];
+      const d = SD.def(c), own = d.fx || {}; let a = d.atk + (c.mod || 0) + (c.tmp || 0); const P = this.P[c.owner];
       if (P.m.includes(c)) {
+        if (own.scale) a += own.scale * P.gy.filter(x => SD.def(x).kind === 'monster').length;
+        if (own.rage && P.lp < this.P[1 - c.owner].lp) a += own.rage;
+        if (this.fieldAttr() === d.attr) a += SD.FIELD_BONUS;
         for (const s of P.st) if (s && !s.faceDown) { const f = SD.def(s).fx; if (s.equippedTo === c.uid) a += f.atk; else if (f.op === 'aura') a += f.atk; }
         for (const m of P.m) if (m && m !== c && !m.faceDown) { const f = SD.def(m).fx; if (f && f.aura) a += f.aura; }
       }
@@ -59,13 +62,23 @@
       Object.assign(c, { pos: 'atk', faceDown: false, equippedTo: null, changedPos: false, attacked: false, attacks: 0, mod: 0, tmp: 0 });
       P.gy.push(c);
     }
+    /* the attribute boosted by the field spell in play, or null */
+    fieldAttr() { for (const P of this.P) for (const s of P.st) if (s && !s.faceDown && SD.def(s).fx.op === 'field') return SD.def(s).fx.attr; return null; }
+    /* what attacker a may hit: a face-up taunt monster must be attacked first */
+    targets(p, a) { const m = this.mons(1 - p), t = m.filter(x => !x.faceDown && (SD.def(x).fx || {}).taunt); return t.length ? t : m; }
+    canDirect(p, a) { const m = this.mons(1 - p); return !m.length || !!(SD.def(a).fx || {}).direct && !m.some(x => !x.faceDown && (SD.def(x).fx || {}).taunt); }
     toHand(c) { /* return a monster on the field to its owner's hand */
       if (this.where(c) !== 'm') return; const P = this.P[c.owner];
       this.emit('bounce', { card: c }); P.m[P.m.indexOf(c)] = null;
       for (const s of [...P.st]) if (s && s.equippedTo === c.uid) this.toGY(s);
       Object.assign(c, { pos: 'atk', faceDown: false, changedPos: false, attacked: false, attacks: 0, mod: 0, tmp: 0 }); P.hand.push(c);
     }
-    destroy(c) { if (!this.onField(c)) return; this.emit('destroy', { card: c }); this.toGY(c); }
+    /* byFx = destroyed by a card effect (not battle): monsters with "immune" shrug it off */
+    destroy(c, byFx) {
+      if (!this.onField(c)) return false;
+      if (byFx && SD.def(c).kind === 'monster' && (SD.def(c).fx || {}).immune) { this.emit('guard', { card: c }); return false; }
+      this.emit('destroy', { card: c }); this.toGY(c); return true;
+    }
 
     canSummon(p, c) {
       const d = SD.def(c); if (d.kind !== 'monster' || !this.isMain(p) || this.normalUsed || this.where(c) !== 'hand') return false;
@@ -143,7 +156,7 @@
         case 'draw': this.draw(p, fx.n); return true;
         case 'heal': this.P[p].lp += fx.n; this.emit('lp', { p, delta: fx.n }); return true;
         case 'burn': this.damage(1 - p, fx.n); return true;
-        case 'destroyMonster': { const c = this.mons(1 - p); if (!c.length) return false; this.destroy(await pick(c, 'destroyMonster')); return true; }
+        case 'destroyMonster': { const c = this.mons(1 - p); if (!c.length) return false; this.destroy(await pick(c, 'destroyMonster'), true); return true; }
         case 'destroyST': { const c = this.sts(1 - p); if (!c.length) return false; this.destroy(await pick(c, 'destroyST')); return true; }
         case 'revive': {
           const c = this.P[p].gy.filter(x => SD.def(x).kind === 'monster'); if (!c.length || this.free(p, 'm') < 0) return false;
@@ -163,12 +176,14 @@
         case 'bounce': { const c = this.mons(1 - p); if (!c.length) return false; this.toHand(await pick(c, 'bounce')); return true; }
         case 'toDef': { const c = this.mons(1 - p).filter(x => !x.faceDown && x.pos === 'atk'); if (!c.length) return false; const t = await pick(c, 'toDef'); t.pos = 'def'; this.emit('pos', { p: 1 - p, card: t }); return true; }
         case 'wipeST': for (const q of [0, 1]) for (const t of this.sts(q)) if (t !== src) this.destroy(t); return true;
-        case 'wipeMon': for (const q of [0, 1]) for (const t of this.mons(q)) this.destroy(t); return true;
+        case 'wipeMon': for (const q of [0, 1]) for (const t of this.mons(q)) this.destroy(t, true); return true;
         case 'cycle': { const h = this.P[p].hand; if (!h.length) return false; const c = await this.ctrl[p].chooseDiscard(h); this.emit('discard', { p, card: c }); this.toGY(c); this.draw(p, 2); return true; }
         case 'burnPer': this.damage(1 - p, fx.n * this.mons(1 - p).length); return true;
         case 'discardOpp': { const h = this.P[1 - p].hand; if (!h.length) return false; const c = h[Math.floor(Math.random() * h.length)]; this.emit('discard', { p: 1 - p, card: c }); this.toGY(c); return true; }
         case 'return': { const P = this.P[p], i = P.gy.indexOf(src); if (i < 0) return false; P.gy.splice(i, 1); P.hand.push(src); this.emit('bounce', { card: src }); return true; }
         case 'aura': return true;
+        case 'token': { const z = this.free(p, 'm'); if (z < 0) return false; const t = mk(fx.id, p); t.summonedTurn = this.turnCount; this.P[p].m[z] = t; this.emit('summon', { p, card: t, mode: 'atk', special: true }); return true; }
+        case 'field': { for (const q of [0, 1]) for (const s of this.sts(q)) if (s !== src && !s.faceDown && SD.def(s).fx.op === 'field') this.toGY(s); this.emit('field', { attr: fx.attr }); return true; }
         case 'equip': { const c = this.mons(p).filter(x => !x.faceDown); if (!c.length) return false; const t = await pick(c, 'equip'); src.equippedTo = t.uid; this.emit('equip', { p, card: src, target: t }); return true; }
       }
       return false;
@@ -182,9 +197,9 @@
         if (trigger === 'summon' && this.atkOf(ctx.card) < d.min) continue;
         if (!await this.ctrl[p].confirmTrap(t, ctx)) continue;
         t.faceDown = false; this.emit('trap', { p, card: t });
-        if (d.fx.op === 'negateDestroy') { ctx.negated = true; this.destroy(ctx.attacker); }
+        if (d.fx.op === 'negateDestroy') { ctx.negated = true; this.destroy(ctx.attacker, true); }
         else if (d.fx.op === 'endBattle') { ctx.negated = true; ctx.endBattle = true; }
-        else if (d.fx.op === 'destroySummoned') this.destroy(ctx.card);
+        else if (d.fx.op === 'destroySummoned') this.destroy(ctx.card, true);
         else if (d.fx.op === 'bounceSummoned') this.toHand(ctx.card);
         else if (d.fx.op === 'weakenAttacker') { ctx.attacker.mod -= d.fx.n; this.emit('mod', { card: ctx.attacker }); }
         else if (d.fx.op === 'reflect') { ctx.negated = true; this.damage(1 - p, Math.floor(this.atkOf(ctx.attacker) / 2)); }
@@ -206,25 +221,26 @@
     async attack(p, a, t) {
       if (!this.canAttack(p, a)) return false;
       const afx = SD.def(a).fx || {};
-      if (t ? this.where(t) !== 'm' || t.owner === p : this.mons(1 - p).length && !afx.direct) return false;
+      if (t ? !this.targets(p, a).includes(t) : !this.canDirect(p, a)) return false;
       a.attacked = true; a.attacks = (a.attacks || 0) + 1; this.emit('attack', { p, attacker: a, target: t });
       const ctx = { attacker: a, target: t }; await this.trapWindow(1 - p, 'attack', ctx);
       if (ctx.endBattle) { this.phase = 'main2'; this.emit('phase', { phase: 'main2' }); return true; }
       if (ctx.negated || this.over || !this.onField(a)) return true;
       await this.onAnim('attack', { p, attacker: a, target: t }); /* lets the UI play the lunge before damage lands */
       const A = this.atkOf(a);
-      if (!t) { this.damage(1 - p, A); return true; }
+      const heal = n => { if (afx.lifesteal && n > 0 && !this.over) { this.P[p].lp += n; this.emit('lp', { p, delta: n }); } };
+      if (!t) { this.damage(1 - p, A); heal(A); if (afx.on === 'hit' && !this.over) await this.runFx(afx, p, a); return true; }
       let flipped = false, killed = false;
       if (t.faceDown) { t.faceDown = false; flipped = true; this.emit('flip', { p: 1 - p, card: t, byAttack: true }); }
       const tfx = SD.def(t).fx;
       if (t.pos === 'atk') {
         const B = this.atkOf(t);
-        if (A > B) { killed = await this.battleDestroy(t); this.damage(1 - p, A - B); }
+        if (A > B) { killed = await this.battleDestroy(t); this.damage(1 - p, A - B); heal(A - B); }
         else if (A < B) { await this.battleDestroy(a); this.damage(p, B - A); }
         else { await this.battleDestroy(a); await this.battleDestroy(t); }
       } else {
         const D = SD.def(t).def;
-        if (A > D) { killed = await this.battleDestroy(t); if (afx.pierce) this.damage(1 - p, A - D); } else if (A < D) this.damage(p, D - A);
+        if (A > D) { killed = await this.battleDestroy(t); if (afx.pierce) { this.damage(1 - p, A - D); heal(A - D); } } else if (A < D) this.damage(p, D - A);
       }
       if (killed && afx.on === 'kill' && !this.over && this.onField(a)) await this.runFx(afx, p, a);
       if (flipped && tfx && tfx.on === 'flip' && !this.over) await this.runFx(tfx, t.owner, t);
@@ -241,6 +257,8 @@
     async endTurn(p) {
       if (this.over || this.turn !== p) return false;
       this.phase = 'end'; this.emit('phase', { phase: 'end' });
+      for (const c of this.mons(p)) { const f = SD.def(c).fx; if (!c.faceDown && f && f.on === 'end' && !this.over) await this.runFx(f, p, c); }
+      if (this.over) return true;
       const P = this.P[p];
       while (P.hand.length > SD.HAND_LIMIT) { const c = await this.ctrl[p].chooseDiscard(P.hand); this.emit('discard', { p, card: c }); this.toGY(c); }
       for (const q of [0, 1]) for (const c of this.mons(q)) c.tmp = 0;

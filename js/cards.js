@@ -2,7 +2,8 @@
    kind: monster | spell | trap
    Monsters: lvl (1-4 no tribute, 5-6 one tribute, 7+ two), atk, def, attr, optional fx
      fx.on: summon | flip | destroyed (by battle) | kill (destroys a monster by battle) | cont (always on)
-     cont abilities: pierce, direct, twice, guard, aura:<atk>
+     fx.on also: hit (deals direct damage) | end (end of your turn)
+     cont abilities: pierce, direct, twice, guard, aura:<atk>, taunt, immune, lifesteal, rage:<atk>, scale:<atk per monster in your graveyard>
    Spells:   sub normal|equip, fx {op, n}
    Traps:    trigger attack|summon, fx {op} */
 (function () {
@@ -87,6 +88,29 @@ SD.CARDS = {
   plagueLord: M(6, 2500, 2000, 'dark', { ar: 'سيّد الوباء', en: 'Plague Lord' },
     { ar: 'يحتاج تضحية واحدة. عند استدعائه: كل وحوش الخصم المكشوفة تخسر 300 هجوم نهائياً.', en: 'Needs 1 tribute. When summoned: all face-up opponent monsters permanently lose 300 ATK.' }, { on: 'summon', op: 'weakenAll', n: 300 }),
 
+  lavaTitan: M(7, 2900, 1800, 'fire', { ar: 'جبّار الحمم', en: 'Lava Titan' },
+    { ar: 'يحتاج تضحيتين. في نهاية كل دور لك: الخصم يخسر 300 نقطة.', en: 'Needs 2 tributes. At the end of each of your turns: your opponent loses 300 LP.' }, { on: 'end', op: 'burn', n: 300 }),
+  salamander: M(3, 1300, 900, 'fire', { ar: 'سمندل الجمر', en: 'Cinder Salamander' },
+    { ar: 'عندما يضرب نقاط حياة الخصم مباشرة: اسحب ورقة.', en: 'When it hits your opponent\'s life points directly: draw 1 card.' }, { on: 'hit', op: 'draw', n: 1 }),
+  pearlGuardian: M(4, 1200, 2200, 'water', { ar: 'حارسة اللؤلؤ', en: 'Pearl Guardian' },
+    { ar: 'استفزاز: ما دامت مكشوفة، وحوش الخصم لا تهاجم غيرها.', en: 'Taunt: while face-up, your opponent\'s monsters can only attack this card.' }, { on: 'cont', taunt: true }),
+  mistJelly: M(2, 500, 1600, 'water', { ar: 'قنديل الضباب', en: 'Mist Jelly' },
+    { ar: 'عند قلبه مكشوفاً: اسحب ورقتين.', en: 'When flipped face-up: draw 2 cards.' }, { on: 'flip', op: 'draw', n: 2 }),
+  hiveQueen: M(5, 2000, 2000, 'earth', { ar: 'ملكة الخلية', en: 'Hive Queen' },
+    { ar: 'يحتاج تضحية واحدة. عند استدعائها: استدعِ نحلة جندية (800/800).', en: 'Needs 1 tribute. When summoned: summon a Hive Drone (800/800).' }, { on: 'summon', op: 'token', id: 'drone' }),
+  drone: M(1, 800, 800, 'earth', { ar: 'نحلة جندية', en: 'Hive Drone' },
+    { ar: 'تستدعيها ملكة الخلية. تصلح للتضحية.', en: 'Summoned by the Hive Queen. Good tribute material.' }),
+  boulderRam: M(4, 1700, 1400, 'earth', { ar: 'كبش الصخور', en: 'Boulder Ram' },
+    { ar: 'غضب: يكسب 400 هجوم ما دامت نقاط حياتك أقل من الخصم.', en: 'Rage: gains 400 ATK while your life points are lower than your opponent\'s.' }, { on: 'cont', rage: 400 }),
+  cloudDjinn: M(4, 1600, 1200, 'wind', { ar: 'مارد الغيم', en: 'Cloud Djinn' },
+    { ar: 'لا تدمّره تأثيرات السحر والفخاخ والوحوش. المعركة فقط تدمّره.', en: 'Cannot be destroyed by card effects. Only battle destroys it.' }, { on: 'cont', immune: true }),
+  dawnPaladin: M(4, 1700, 1500, 'light', { ar: 'فارس الفجر', en: 'Dawn Paladin' },
+    { ar: 'في نهاية كل دور لك: تكسب 300 نقطة حياة.', en: 'At the end of each of your turns: gain 300 LP.' }, { on: 'end', op: 'heal', n: 300 }),
+  boneCollector: M(4, 1200, 1200, 'dark', { ar: 'جامع العظام', en: 'Bone Collector' },
+    { ar: 'يكسب 200 هجوم عن كل وحش في مقبرتك.', en: 'Gains 200 ATK for each monster in your graveyard.' }, { on: 'cont', scale: 200 }),
+  bloodBat: M(4, 1600, 1000, 'dark', { ar: 'خفّاش الدم', en: 'Blood Bat' },
+    { ar: 'امتصاص: كل ضرر معركة يسبّبه للخصم تكسبه أنت نقاط حياة.', en: 'Lifesteal: you gain LP equal to the battle damage it deals to your opponent.' }, { on: 'cont', lifesteal: true }),
+
   kindle: S('normal', { op: 'draw', n: 2 }, { ar: 'ومضة بصيرة', en: 'Kindle Insight' },
     { ar: 'اسحب ورقتين.', en: 'Draw 2 cards.' }),
   shatter: S('normal', { op: 'destroyMonster' }, { ar: 'صاعقة التحطيم', en: 'Shatter Bolt' },
@@ -121,6 +145,19 @@ SD.CARDS = {
   warBanner: S('cont', { op: 'aura', atk: 200 }, { ar: 'راية الحرب', en: 'War Banner' },
     { ar: 'سحر مستمر: يبقى على الساحة، وكل وحوشك تكسب 200 هجوم.', en: 'Continuous spell: stays on the field. All your monsters gain 200 ATK.' }),
 
+  fieldFire: S('field', { op: 'field', attr: 'fire' }, { ar: 'ساحة: المسبك المنصهر', en: 'Arena: Molten Forge' },
+    { ar: 'ساحة: كل وحوش النار عند اللاعبَين تكسب 300 هجوم. تستبدل أي ساحة أخرى.', en: 'Arena: every Fire monster on both sides gains 300 ATK. Replaces any other arena.' }),
+  fieldWater: S('field', { op: 'field', attr: 'water' }, { ar: 'ساحة: الشعاب الغارقة', en: 'Arena: Sunken Reef' },
+    { ar: 'ساحة: كل وحوش الماء عند اللاعبَين تكسب 300 هجوم. تستبدل أي ساحة أخرى.', en: 'Arena: every Water monster on both sides gains 300 ATK. Replaces any other arena.' }),
+  fieldEarth: S('field', { op: 'field', attr: 'earth' }, { ar: 'ساحة: الغابة العتيقة', en: 'Arena: Ancient Grove' },
+    { ar: 'ساحة: كل وحوش الأرض عند اللاعبَين تكسب 300 هجوم. تستبدل أي ساحة أخرى.', en: 'Arena: every Earth monster on both sides gains 300 ATK. Replaces any other arena.' }),
+  fieldWind: S('field', { op: 'field', attr: 'wind' }, { ar: 'ساحة: قمة العواصف', en: 'Arena: Storm Peak' },
+    { ar: 'ساحة: كل وحوش الريح عند اللاعبَين تكسب 300 هجوم. تستبدل أي ساحة أخرى.', en: 'Arena: every Wind monster on both sides gains 300 ATK. Replaces any other arena.' }),
+  fieldLight: S('field', { op: 'field', attr: 'light' }, { ar: 'ساحة: معبد الفجر', en: 'Arena: Dawn Temple' },
+    { ar: 'ساحة: كل وحوش النور عند اللاعبَين تكسب 300 هجوم. تستبدل أي ساحة أخرى.', en: 'Arena: every Light monster on both sides gains 300 ATK. Replaces any other arena.' }),
+  fieldDark: S('field', { op: 'field', attr: 'dark' }, { ar: 'ساحة: صدع الفراغ', en: 'Arena: Void Rift' },
+    { ar: 'ساحة: كل وحوش الظلام عند اللاعبَين تكسب 300 هجوم. تستبدل أي ساحة أخرى.', en: 'Arena: every Dark monster on both sides gains 300 ATK. Replaces any other arena.' }),
+
   ward: T('attack', { op: 'negateDestroy' }, { ar: 'درع المرآة', en: 'Mirror Ward' },
     { ar: 'عندما يهاجم وحش الخصم: ألغِ الهجوم ودمّر ذلك الوحش.', en: 'When an opponent\'s monster attacks: cancel the attack and destroy that monster.' }),
   still: T('attack', { op: 'endBattle' }, { ar: 'سكون الريح', en: 'Still Air' },
@@ -146,20 +183,25 @@ SD.DECKS = {
     ['kindle', 2], ['shatter', 2], ['gust', 2], ['mend', 1], ['recall', 1], ['whet', 2], ['scorch', 1],
     ['ward', 2], ['still', 1], ['pit', 2]] },
   ember: { name: { ar: 'لهب وعاصفة', en: 'Flame & Gale' }, list: [
-    ['emberFox', 2], ['cinderHound', 2], ['magmaBoar', 2], ['galeLancer', 2], ['twinTalon', 2], ['rustMoth', 2], ['zephyrSprite', 2],
-    ['thornBear', 1], ['scrollKeeper', 1], ['stormWyvern', 2], ['ashPhoenix', 2], ['dawnSeraph', 1],
+    ['emberFox', 2], ['cinderHound', 2], ['magmaBoar', 2], ['galeLancer', 2], ['twinTalon', 2], ['salamander', 2], ['zephyrSprite', 2],
+    ['thornBear', 1], ['cloudDjinn', 1], ['stormWyvern', 2], ['ashPhoenix', 2], ['lavaTitan', 1],
     ['kindle', 2], ['scorch', 2], ['emberRain', 1], ['rally', 2], ['shatter', 1], ['gust', 1], ['whet', 2], ['recall', 1],
-    ['ward', 2], ['thornWall', 2], ['pit', 1], ['counterSeal', 1], ['still', 1]] },
+    ['ward', 2], ['thornWall', 2], ['pit', 1], ['counterSeal', 1], ['fieldFire', 1]] },
   tide: { name: { ar: 'أعماق وصخر', en: 'Deep & Stone' }, list: [
-    ['tideDancer', 2], ['coralArcher', 2], ['frostSerpent', 2], ['graniteSentinel', 2], ['mossTurtle', 2], ['thornBear', 2], ['crystalBeetle', 1],
-    ['mirrorLurker', 1], ['scrollKeeper', 1], ['deepColossus', 2], ['tidalLeviathan', 2], ['starUnicorn', 2],
-    ['kindle', 2], ['undertow', 2], ['frostBind', 2], ['mend', 1], ['cataclysm', 1], ['warBanner', 1], ['shatter', 2], ['gust', 1],
+    ['tideDancer', 2], ['coralArcher', 2], ['frostSerpent', 2], ['graniteSentinel', 2], ['pearlGuardian', 2], ['thornBear', 2], ['boulderRam', 1],
+    ['mistJelly', 1], ['scrollKeeper', 1], ['deepColossus', 2], ['tidalLeviathan', 2], ['starUnicorn', 1], ['hiveQueen', 1],
+    ['kindle', 2], ['undertow', 2], ['frostBind', 2], ['mend', 1], ['cataclysm', 1], ['warBanner', 1], ['shatter', 2], ['fieldWater', 1],
     ['still', 2], ['reflectPrism', 2], ['updraft', 2], ['ward', 1]] },
   dusk: { name: { ar: 'نور وظلام', en: 'Light & Shadow' }, list: [
-    ['duskBlade', 2], ['graveRook', 2], ['nightStalker', 1], ['mirrorLurker', 2], ['sunPriest', 2], ['scrollKeeper', 2], ['lanternWisp', 2],
-    ['galeLancer', 1], ['graniteSentinel', 2], ['starUnicorn', 2], ['plagueLord', 1], ['dawnSeraph', 1], ['voidTyrant', 1],
+    ['duskBlade', 2], ['graveRook', 2], ['nightStalker', 1], ['mirrorLurker', 2], ['sunPriest', 2], ['scrollKeeper', 2], ['dawnPaladin', 2],
+    ['boneCollector', 1], ['bloodBat', 2], ['starUnicorn', 2], ['plagueLord', 1], ['dawnSeraph', 1], ['voidTyrant', 1],
     ['kindle', 1], ['exchange', 2], ['shrinkHex', 2], ['scorch', 1], ['stormSweep', 1], ['recall', 2], ['shatter', 1], ['mend', 1], ['warBanner', 1],
-    ['counterSeal', 2], ['pit', 2], ['ward', 2], ['thornWall', 1]] }
+    ['counterSeal', 2], ['pit', 2], ['ward', 2], ['fieldDark', 1]] },
+  wild: { name: { ar: 'غابة وسماء', en: 'Grove & Sky' }, list: [
+    ['thornBear', 2], ['boulderRam', 2], ['crystalBeetle', 1], ['mossTurtle', 1], ['twinTalon', 2], ['cloudDjinn', 2], ['galeLancer', 2],
+    ['sunPriest', 1], ['dawnPaladin', 1], ['scrollKeeper', 1], ['zephyrSprite', 1], ['hiveQueen', 2], ['stormWyvern', 1], ['starUnicorn', 1], ['dawnSeraph', 1],
+    ['fieldEarth', 1], ['fieldWind', 1], ['fieldLight', 1], ['kindle', 2], ['rally', 1], ['whet', 2], ['shatter', 2], ['gust', 1], ['mend', 1],
+    ['ward', 2], ['updraft', 2], ['thornWall', 1], ['reflectPrism', 1], ['pit', 1]] }
 };
 SD.buildDeck = key => SD.DECKS[key || 'starter'].list.flatMap(([id, n]) => Array(n).fill(id));
 

@@ -2,7 +2,7 @@
 (function () {
   const SD = window.SD, app = document.getElementById('app'), fx = document.getElementById('fx');
   const store = { get(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) { } } };
-  let lang = store.get('sd-lang', 'ar'), level = +store.get('sd-level', 1), deck = store.get('sd-deck', 'starter'), foeDeck = null;
+  let lang = store.get('sd-lang', 'ar'), level = +store.get('sd-level', 1), deck = store.get('sd-deck', 'starter'), foeDeck = null, baseArena = 'default';
   if (!SD.DECKS[deck]) deck = 'starter';
   let screen = 'menu', mode = null, G = null, ai = null, sel = null, prompt = null, modal = null, busy = false, log = [], goals = null, libFilter = 'all';
   const GOALS = ['read', 'summon', 'spell', 'trapset', 'end', 'trapuse', 'tribute', 'attack', 'set'];
@@ -17,7 +17,7 @@
   /* ---------- cards ---------- */
   function cardHTML(c, o = {}) {
     const d = D(c), cls = ['card', 'k-' + d.kind];
-    if (o.full) cls.push('full'); if (o.mini) cls.push('mini');
+    if (o.full) cls.push('full'); if (o.mini) cls.push('mini'); if (d.kind === 'monster' && d.lvl >= 5) cls.push('foil');
     if (o.field && d.kind === 'monster') cls.push(c.pos === 'def' ? 'def' : 'isatk');
     let st = '';
     if (o.field) { /* drop-in animation the first time a card shows up (or flips) on the field */
@@ -30,7 +30,7 @@
     if (o.hidden) return `<div class="${cls.join(' ')} back" data-uid="${c.uid}" style="${st}"><div class="cf">${SD.backArt}</div></div>`;
     if (o.ownDown) cls.push('own-down');
     const col = d.kind === 'monster' ? SD.ATTR[d.attr].c : SD.KIND_COLOR[d.kind];
-    const kindLabel = d.kind === 'monster' ? `${SD.ATTR[d.attr][lang]} · ${t(d.fx ? 'effectM' : 'normalM')}` : t(d.kind === 'trap' ? 'kTrap' : d.sub === 'equip' ? 'kEquip' : d.sub === 'cont' ? 'kCont' : 'kSpell');
+    const kindLabel = d.kind === 'monster' ? `${SD.ATTR[d.attr][lang]} · ${t(d.fx ? 'effectM' : 'normalM')}` : t(d.kind === 'trap' ? 'kTrap' : d.sub === 'equip' ? 'kEquip' : d.sub === 'cont' ? 'kCont' : d.sub === 'field' ? 'kField' : 'kSpell');
     const atk = d.kind === 'monster' ? (G && o.field ? G.atkOf(c) : d.atk) : 0;
     const foot = d.kind === 'monster'
       ? `<div class="c-stats"><b class="atk${atk > d.atk ? ' up' : atk < d.atk ? ' down' : ''}">${o.full ? `<i>${t('atk')}</i>` : ''}${atk}</b><b class="dfn">${o.full ? `<i>${t('def')}</i>` : ''}${d.def}</b></div>`
@@ -100,7 +100,7 @@
       <div class="opp-hand">${op.hand.map(() => `<div class="card mini back"><div class="cf">${SD.backArt}</div></div>`).join('')}</div>
       <div class="zones opp">${piles(1, 'deck')}${rev(op.st).map(c => zone(c, 'st', 1)).join('')}</div>
       <div class="zones opp">${piles(1, 'gy')}${rev(op.m).map(c => zone(c, 'm', 1)).join('')}</div>
-      <div class="phasebar"><span class="turn">${t('turnN', G.turnCount)}</span>${PHASES.map(p => `<span class="${G.phase === p ? 'on' : ''}">${t('ph_' + p)}</span>`).join('')}</div>
+      <div class="phasebar"><span class="turn">${t('turnN', G.turnCount)}</span>${PHASES.map(p => `<span class="${G.phase === p ? 'on' : ''}">${t('ph_' + p)}</span>`).join('')}<span class="arena">${t('ar_' + arenaNow())}</span></div>
       <div class="zones">${me.m.map(c => zone(c, 'm', 0)).join('')}${piles(0, 'gy')}</div>
       <div class="zones">${me.st.map(c => zone(c, 'st', 0)).join('')}${piles(0, 'deck')}</div>
       ${info(0)}
@@ -131,7 +131,7 @@
       if (w === 'm') {
         if (G.isMain(0) && sel.faceDown && sel.summonedTurn < G.turnCount) b.push(btn('flip', t('bFlip'), 'primary'));
         if (G.canChangePos(0, sel)) b.push(btn('pos', t('bPos')));
-        if (G.canAttack(0, sel)) { b.push(btn('attack', t(G.mons(1).length ? 'bAttack' : 'bDirect'), 'primary')); if (G.mons(1).length && (d.fx || {}).direct) b.push(btn('direct', t('bDirectFx'))); }
+        if (G.canAttack(0, sel)) { b.push(btn('attack', t(G.mons(1).length ? 'bAttack' : 'bDirect'), 'primary')); if (G.mons(1).length && G.canDirect(0, sel)) b.push(btn('direct', t('bDirectFx'))); }
       }
     }
     const ph = [];
@@ -154,7 +154,7 @@
     let tip = next ? t('h_' + next) : t('allDone'), about = '';
     if (sel) {
       const d = D(sel), n = d.kind === 'monster' ? SD.tributes(d) : 0;
-      about = d.kind === 'monster' ? (n ? t('k_high', d.lvl, n) : t('k_low', d.lvl)) + (d.fx ? ' ' + t('k_fx') : '') : t(d.kind === 'trap' ? 'k_trap' : d.sub === 'equip' ? 'k_equip' : d.sub === 'cont' ? 'k_cont' : 'k_spell');
+      about = d.kind === 'monster' ? (n ? t('k_high', d.lvl, n) : t('k_low', d.lvl)) + (d.fx ? ' ' + t('k_fx') : '') : t(d.kind === 'trap' ? 'k_trap' : d.sub === 'equip' ? 'k_equip' : d.sub === 'cont' ? 'k_cont' : d.sub === 'field' ? 'k_field' : 'k_spell');
     }
     return `<aside class="coach"><h3>${t('coach')}</h3><p class="tip">${tip}</p>${about ? `<p class="about"><b>${cname(sel)}:</b> ${about}</p>` : ''}
       <h4>${t('goalsTitle')}</h4><ul class="goals">${GOALS.map(g => `<li class="${goals[g] ? 'done' : g === next ? 'next' : ''}">${t('g_' + g)}</li>`).join('')}</ul></aside>`;
@@ -188,6 +188,7 @@
       case 'equip': add('log_equip', [cn(d.target), cn(d.card)]); break;
       case 'discard': add('log_discard', [who(d.p)]); break;
       case 'guard': add('log_guard', [cn(d.card)], 'hl'); break;
+      case 'field': add('log_field', [{ k: 'ar_' + d.attr }], 'hl'); break;
       case 'bounce': add('log_bounce', [nm(d.card)]); break;
       case 'mod': d.card ? add('log_mod', [cn(d.card)]) : add('log_modAll'); break;
       case 'lp': add('log_lp', [who(d.p), (d.delta > 0 ? '+' : '') + d.delta], d.delta < 0 ? 'dmg' : 'heal'); break;
@@ -200,10 +201,14 @@
     if (mode === 'tutorial') tutorialEvent(type, d);
     render();
     if (type === 'lp') floatLP(d);
+    if (type === 'summon' && d.mode !== 'set') { const el = boardCard(d.card); if (el) { const r = el.getBoundingClientRect(); fxNode('ring', '', 700, { left: r.left + r.width / 2 + 'px', top: r.top + r.height / 2 + 'px', '--c': colOf(d.card) }); } }
+    if (type === 'field') fxNode('flash', '', 900, { '--c': SD.ATTR[d.attr].c });
   }
   /* ---------- effects (drawn in #fx, which is never re-rendered) ---------- */
   const boardCard = c => document.querySelector(`.board .card[data-uid="${c.uid}"]`);
-  function fxNode(cls, html, ms, css) { if (calm) return; const n = document.createElement('div'); n.className = cls; n.innerHTML = html || ''; Object.assign(n.style, css || {}); fx.appendChild(n); setTimeout(() => n.remove(), ms); }
+  const arenaNow = () => screen === 'game' && G ? (G.fieldAttr() || baseArena) : 'default';
+  const colOf = c => SD.CARDS[c.id].kind === 'monster' ? SD.ATTR[SD.CARDS[c.id].attr].c : SD.KIND_COLOR[SD.CARDS[c.id].kind];
+  function fxNode(cls, html, ms, css) { if (calm) return; const n = document.createElement('div'); n.className = cls; n.innerHTML = html || ''; for (const k in css || {}) n.style.setProperty(k, css[k]); fx.appendChild(n); setTimeout(() => n.remove(), ms); }
   function ghost(c) { /* a dying card leaves a copy that burns away */
     const el = boardCard(c); if (!el || calm) return; const r = el.getBoundingClientRect(), n = el.cloneNode(true);
     n.classList.remove('enter', 'sel', 'pick', 'def'); n.classList.add('fx-ghost');
@@ -217,7 +222,7 @@
     const dx = (cx - ra.left - ra.width / 2) * .8, dy = (cy - ra.top - ra.height / 2) * .8;
     a.style.zIndex = 6;
     const an = a.animate([{ transform: 'none' }, { transform: `translate(${-dx * .08}px,${-dy * .08}px) scale(1.08)`, offset: .25 }, { transform: `translate(${dx}px,${dy}px) scale(1.18)`, offset: .6 }, { transform: 'none' }], { duration: 520, easing: 'ease-in-out' });
-    setTimeout(() => fxNode('burst', '', 450, { left: cx + 'px', top: cy + 'px' }), 290);
+    setTimeout(() => fxNode('burst', '', 450, { left: cx + 'px', top: cy + 'px', '--c': colOf(d.attacker) }), 290);
     await Promise.race([an.finished.catch(() => { }), sleep(560)]);
   }
   function floatLP(d) {
@@ -252,7 +257,8 @@
   function newGame(m) {
     mode = m; screen = 'game'; sel = null; prompt = null; modal = null; busy = false; log = [];
     goals = m === 'tutorial' ? {} : null;
-    let decks, first = 0, lv = level;
+    let decks, first = 0, lv = level; const attrs = Object.keys(SD.ATTR);
+    baseArena = m === 'tutorial' ? 'default' : attrs[Math.floor(Math.random() * attrs.length)];
     if (m === 'tutorial') {
       lv = 0;
       decks = ['you', 'opp'].map(k => { const rest = SD.buildDeck(); for (const id of SD.TUTORIAL[k]) rest.splice(rest.indexOf(id), 1); return [...SD.shuffle(rest), ...[...SD.TUTORIAL[k]].reverse()]; });
@@ -275,7 +281,7 @@
     summon() { const c = sel; run(() => G.summon(0, c, 'atk')); }, setm() { const c = sel; run(() => G.summon(0, c, 'set')); },
     activate() { const c = sel; run(() => G.playSpell(0, c)); }, setst() { const c = sel; run(async () => G.setCard(0, c)); },
     flip() { const c = sel; run(() => G.flipSummon(0, c)); }, pos() { const c = sel; run(async () => G.changePos(0, c)); },
-    attack() { const a = sel; run(async () => { let tg = null; if (G.mons(1).length) { tg = await pick(G.mons(1), t('pickTarget'), true); if (!tg) return; } await G.attack(0, a, tg); }); },
+    attack() { const a = sel; run(async () => { let tg = null; if (G.mons(1).length) { tg = await pick(G.targets(0, a), t('pickTarget'), true); if (!tg) return; } await G.attack(0, a, tg); }); },
     direct() { const a = sel; run(() => G.attack(0, a, null)); },
     next() { run(async () => G.nextPhase(0)); },
     end() { run(async () => { sel = null; await G.endTurn(0); if (!G.over) await aiTurn(); }); }
@@ -300,11 +306,15 @@
 
   function render() {
     document.documentElement.lang = lang; document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
-    document.title = t('title');
+    document.title = t('title'); document.body.dataset.arena = arenaNow();
     const y = window.scrollY;
     app.style.setProperty('--t', -Math.round(performance.now()) + 'ms'); /* keeps looping art in phase across re-renders */
     app.innerHTML = screen === 'menu' ? menuHTML() : screen === 'lib' ? libHTML() : gameHTML();
     window.scrollTo(0, y);
   }
+  /* drifting background particles; their look comes from body[data-arena] in the CSS */
+  const bg = document.createElement('div'); bg.id = 'bg';
+  for (let i = 0; i < 26; i++) { const r = Math.random; bg.insertAdjacentHTML('beforeend', `<i style="--x:${(r() * 100).toFixed(1)}%;--y:${(r() * 100).toFixed(1)}%;--s:${(.5 + r()).toFixed(2)};--dur:${(7 + r() * 9).toFixed(1)}s;--del:-${(r() * 16).toFixed(1)}s"></i>`); }
+  document.body.prepend(bg);
   render();
 })();
