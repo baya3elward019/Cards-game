@@ -8,7 +8,17 @@
 
     function wantSpell(c) {
       const op = D(c).fx.op;
-      if (op === 'draw' || op === 'burn' || op === 'destroyST') return true;
+      const mine = G.mons(p).filter(x => !x.faceDown), theirs = G.mons(foe), up = theirs.filter(x => !x.faceDown);
+      const sum = a => a.reduce((s, x) => s + G.atkOf(x), 0), top = a => Math.max(0, ...a.map(x => G.atkOf(x)));
+      if (op === 'draw' || op === 'burn' || op === 'destroyST' || op === 'aura') return true;
+      if (op === 'weaken' || op === 'shrink') return top(up) >= 1500 && mine.length > 0;
+      if (op === 'toDef') return up.some(x => x.pos === 'atk' && G.atkOf(x) >= top(mine) && D(x).def < top(mine));
+      if (op === 'bounce') return up.some(x => G.atkOf(x) >= 1800) || theirs.length && !mine.length;
+      if (op === 'buffAll') return mine.some(x => x.pos === 'atk') && G.turnCount > 1 && G.phase === 'main1';
+      if (op === 'wipeMon') return theirs.length >= mine.length + 2 || sum(up) > sum(mine) + 1500;
+      if (op === 'wipeST') return G.sts(foe).length >= 2 && G.sts(foe).length > G.sts(p).length;
+      if (op === 'cycle') return me().hand.length >= 3;
+      if (op === 'burnPer') return theirs.length >= 2;
       if (op === 'heal') return me().lp < SD.START_LP;
       if (op === 'destroyMonster') return G.mons(foe).some(x => !x.faceDown && G.atkOf(x) >= 1500);
       if (op === 'revive') return me().gy.some(x => D(x).kind === 'monster' && D(x).atk >= 1500);
@@ -45,15 +55,16 @@
     async function battle(wait) {
       if (!G.nextPhase(p)) return;
       const order = G.mons(p).filter(c => G.canAttack(p, c)).sort((a, b) => G.atkOf(b) - G.atkOf(a));
-      for (const a of order) {
-        if (G.over || G.phase !== 'battle' || !G.canAttack(p, a)) continue;
+      for (let i = 0; i < order.length && i < 12; i++) {
+        const a = order[i]; if (G.over || G.phase !== 'battle' || !G.canAttack(p, a)) continue;
         const A = G.atkOf(a), foes = G.mons(foe); let t = null, go = !foes.length;
         if (foes.length) {
           const beat = foes.filter(f => !f.faceDown && (f.pos === 'atk' ? G.atkOf(f) < A : D(f).def < A));
           if (beat.length) { t = best(beat, f => (f.pos === 'atk' ? 5000 : 0) + G.atkOf(f)); go = true; }
+          else if ((D(a).fx || {}).direct) go = true; /* slips past the defenders */
           else { const fd = foes.find(f => f.faceDown); if (fd && A >= (level ? 1600 : 1900)) { t = fd; go = true; } }
         }
-        if (go) { await wait(); await G.attack(p, a, t); await wait(); }
+        if (go) { await wait(); await G.attack(p, a, t); await wait(); if (G.canAttack(p, a)) order.push(a); }
       }
     }
     return {

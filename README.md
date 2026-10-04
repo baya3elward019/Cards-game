@@ -19,7 +19,7 @@ Open `index.html` in a browser. No build step, nothing to install.
 
 | File | ماذا فيه |
 |---|---|
-| `js/cards.js` | كل الأوراق وقائمة المجموعة (40 ورقة). أضف أو عدّل الأوراق هنا |
+| `js/cards.js` | كل الأوراق (52 ورقة) والمجموعات الأربع (`SD.DECKS`). أضف أو عدّل الأوراق هنا |
 | `js/i18n.js` | كل نصوص الواجهة بالعربي والإنجليزي |
 | `js/engine.js` | القواعد: المراحل، الاستدعاء، المعركة، السحر والفخاخ |
 | `js/ai.js` | الخصم الآلي (سهل / عادي) |
@@ -29,11 +29,15 @@ Open `index.html` in a browser. No build step, nothing to install.
 
 ### إضافة ورقة · Add a card
 
-في `js/cards.js` أضف سطراً داخل `SD.CARDS` ثم أضف المعرّف إلى `SD.DECKLIST`:
+في `js/cards.js` أضف سطراً داخل `SD.CARDS` ثم أضف المعرّف إلى إحدى المجموعات في `SD.DECKS` (كل مجموعة 40 ورقة):
 
 ```js
 frostOwl: M(4, 1600, 1200, 'water', { ar: 'بومة الصقيع', en: 'Frost Owl' },
   { ar: 'وصف الورقة.', en: 'Card text.' }),
 ```
 
-التأثيرات المتاحة (`op`): `draw`, `heal`, `burn`, `destroyMonster`, `destroyST`, `revive`, `equip`.
+التأثيرات المتاحة (`op`): `draw`, `heal`, `burn`, `burnPer`, `destroyMonster`, `destroyST`, `revive`, `equip`, `weaken`, `weakenAll`, `shrink`, `gainAtk`, `buffAll`, `bounce`, `toDef`, `cycle`, `discardOpp`, `wipeMon`, `wipeST`, `aura`.
+
+قدرات الوحوش المستمرة (`on: 'cont'`): `pierce`, `direct`, `twice`, `guard`, `aura`.
+
+لرسم وحش جديد أضف رسمته في `js/art.js` داخل `SD.MONSTER_ART` بنفس معرّف الورقة؛ من غير رسمة تظهر الورقة بختم.

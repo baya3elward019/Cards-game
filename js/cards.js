@@ -1,6 +1,8 @@
 /* Card database — add or edit cards here.
    kind: monster | spell | trap
-   Monsters: lvl (1-4 no tribute, 5-6 one tribute, 7+ two), atk, def, attr, optional fx {on, op, n}
+   Monsters: lvl (1-4 no tribute, 5-6 one tribute, 7+ two), atk, def, attr, optional fx
+     fx.on: summon | flip | destroyed (by battle) | kill (destroys a monster by battle) | cont (always on)
+     cont abilities: pierce, direct, twice, guard, aura:<atk>
    Spells:   sub normal|equip, fx {op, n}
    Traps:    trigger attack|summon, fx {op} */
 (function () {
@@ -56,6 +58,35 @@ SD.CARDS = {
   voidTyrant: M(8, 3000, 2500, 'dark', { ar: 'طاغية الفراغ', en: 'Void Tyrant' },
     { ar: 'يحتاج تضحيتين. لا شيء في هذه المجموعة أقوى منه.', en: 'Needs 2 tributes. Nothing in this set hits harder.' }),
 
+  magmaBoar: M(4, 1800, 1200, 'fire', { ar: 'خنزير الحمم', en: 'Magma Boar' },
+    { ar: 'اختراق: إن هاجم وحشاً في الدفاع وهجومه أعلى، الخصم يخسر الفرق.', en: 'Piercing: when it attacks a defense monster with lower DEF, your opponent loses the difference.' }, { on: 'cont', pierce: true }),
+  ashPhoenix: M(6, 2500, 1800, 'fire', { ar: 'عنقاء الرماد', en: 'Ashwing Phoenix' },
+    { ar: 'يحتاج تضحية واحدة. عند تدميرها في معركة: تعود إلى يدك.', en: 'Needs 1 tribute. When destroyed by battle: it returns to your hand.' }, { on: 'destroyed', op: 'return' }),
+  coralArcher: M(3, 1400, 1400, 'water', { ar: 'رامية المرجان', en: 'Coral Archer' },
+    { ar: 'تستطيع مهاجمة نقاط حياة الخصم مباشرة حتى لو عنده وحوش.', en: 'Can attack your opponent\'s life points directly even if they control monsters.' }, { on: 'cont', direct: true }),
+  frostSerpent: M(4, 1800, 1300, 'water', { ar: 'أفعى الصقيع', en: 'Frost Serpent' },
+    { ar: 'عند استدعائها مكشوفة: وحش مكشوف للخصم يخسر 500 هجوم نهائياً.', en: 'When summoned face-up: 1 face-up opponent monster permanently loses 500 ATK.' }, { on: 'summon', op: 'weaken', n: 500 }),
+  tidalLeviathan: M(7, 2800, 2400, 'water', { ar: 'لوياثان المدّ', en: 'Tidal Leviathan' },
+    { ar: 'يحتاج تضحيتين. عند استدعائه: أعد وحشاً للخصم إلى يده.', en: 'Needs 2 tributes. When summoned: return 1 opponent monster to their hand.' }, { on: 'summon', op: 'bounce' }),
+  thornBear: M(4, 1800, 1500, 'earth', { ar: 'دب الأشواك', en: 'Thorn Bear' },
+    { ar: 'كلما دمّر وحشاً في معركة: يكسب 300 هجوم نهائياً.', en: 'Each time it destroys a monster by battle: it permanently gains 300 ATK.' }, { on: 'kill', op: 'gainAtk', n: 300 }),
+  crystalBeetle: M(3, 1000, 2100, 'earth', { ar: 'خنفساء البلّور', en: 'Crystal Beetle' },
+    { ar: 'مرة في كل دور: لا تُدمَّر في المعركة.', en: 'Once per turn: it is not destroyed by battle.' }, { on: 'cont', guard: true }),
+  twinTalon: M(4, 1500, 1000, 'wind', { ar: 'صقر المخلبين', en: 'Twin Talon' },
+    { ar: 'يستطيع الهجوم مرتين في مرحلة المعركة.', en: 'Can attack twice each battle phase.' }, { on: 'cont', twice: true }),
+  zephyrSprite: M(2, 700, 900, 'wind', { ar: 'جنّية النسيم', en: 'Zephyr Sprite' },
+    { ar: 'عند قلبها مكشوفة: أعد وحشاً للخصم إلى يده.', en: 'When flipped face-up: return 1 opponent monster to their hand.' }, { on: 'flip', op: 'bounce' }),
+  sunPriest: M(4, 1500, 1600, 'light', { ar: 'كاهن الشمس', en: 'Sun Priest' },
+    { ar: 'وحوشك الأخرى تكسب 200 هجوم ما دام مكشوفاً على الساحة.', en: 'Your other monsters gain 200 ATK while this card is face-up on the field.' }, { on: 'cont', aura: 200 }),
+  starUnicorn: M(5, 2200, 1800, 'light', { ar: 'حصان النجوم', en: 'Star Unicorn' },
+    { ar: 'يحتاج تضحية واحدة. كلما دمّر وحشاً في معركة: تكسب 800 نقطة.', en: 'Needs 1 tribute. Each time it destroys a monster by battle: gain 800 LP.' }, { on: 'kill', op: 'heal', n: 800 }),
+  graveRook: M(3, 1300, 1100, 'dark', { ar: 'غراب القبور', en: 'Grave Rook' },
+    { ar: 'عند تدميره في معركة: اسحب ورقة.', en: 'When destroyed by battle: draw 1 card.' }, { on: 'destroyed', op: 'draw', n: 1 }),
+  nightStalker: M(4, 1600, 800, 'dark', { ar: 'متعقّب الليل', en: 'Night Stalker' },
+    { ar: 'عند استدعائه مكشوفاً: الخصم يتخلص من ورقة عشوائية من يده.', en: 'When summoned face-up: your opponent discards 1 random card.' }, { on: 'summon', op: 'discardOpp' }),
+  plagueLord: M(6, 2500, 2000, 'dark', { ar: 'سيّد الوباء', en: 'Plague Lord' },
+    { ar: 'يحتاج تضحية واحدة. عند استدعائه: كل وحوش الخصم المكشوفة تخسر 300 هجوم نهائياً.', en: 'Needs 1 tribute. When summoned: all face-up opponent monsters permanently lose 300 ATK.' }, { on: 'summon', op: 'weakenAll', n: 300 }),
+
   kindle: S('normal', { op: 'draw', n: 2 }, { ar: 'ومضة بصيرة', en: 'Kindle Insight' },
     { ar: 'اسحب ورقتين.', en: 'Draw 2 cards.' }),
   shatter: S('normal', { op: 'destroyMonster' }, { ar: 'صاعقة التحطيم', en: 'Shatter Bolt' },
@@ -71,23 +102,66 @@ SD.CARDS = {
   scorch: S('normal', { op: 'burn', n: 600 }, { ar: 'لفحة', en: 'Scorch' },
     { ar: 'الخصم يخسر 600 نقطة حياة.', en: 'Your opponent loses 600 LP.' }),
 
+  rally: S('normal', { op: 'buffAll', n: 500 }, { ar: 'نداء الحشد', en: 'Rally Cry' },
+    { ar: 'كل وحوشك المكشوفة تكسب 500 هجوم حتى نهاية الدور.', en: 'All your face-up monsters gain 500 ATK until the end of the turn.' }),
+  cataclysm: S('normal', { op: 'wipeMon' }, { ar: 'الطوفان', en: 'Cataclysm' },
+    { ar: 'دمّر كل الوحوش على الساحة، وحوشك ووحوش الخصم.', en: 'Destroy every monster on the field, yours included.' }),
+  stormSweep: S('normal', { op: 'wipeST' }, { ar: 'كنس العاصفة', en: 'Storm Sweep' },
+    { ar: 'دمّر كل أوراق السحر والفخ الأخرى على الساحة.', en: 'Destroy every other spell and trap on the field.' }),
+  frostBind: S('normal', { op: 'toDef' }, { ar: 'قيد الجليد', en: 'Frost Bind' },
+    { ar: 'حوّل وحشاً للخصم في وضع الهجوم إلى وضع الدفاع.', en: 'Switch 1 attack-position opponent monster to defense.' }),
+  shrinkHex: S('normal', { op: 'shrink' }, { ar: 'لعنة التقزيم', en: 'Shrink Hex' },
+    { ar: 'وحش مكشوف للخصم يخسر نصف هجومه حتى نهاية الدور.', en: '1 face-up opponent monster loses half its ATK until the end of the turn.' }),
+  exchange: S('normal', { op: 'cycle' }, { ar: 'مقايضة', en: 'Fair Exchange' },
+    { ar: 'تخلص من ورقة من يدك، ثم اسحب ورقتين.', en: 'Discard 1 card, then draw 2.' }),
+  emberRain: S('normal', { op: 'burnPer', n: 300 }, { ar: 'مطر الجمر', en: 'Ember Rain' },
+    { ar: 'الخصم يخسر 300 نقطة عن كل وحش يتحكم به.', en: 'Your opponent loses 300 LP for each monster they control.' }),
+  undertow: S('normal', { op: 'bounce' }, { ar: 'التيار الساحب', en: 'Undertow' },
+    { ar: 'أعد وحشاً للخصم إلى يده.', en: 'Return 1 opponent monster to their hand.' }),
+  warBanner: S('cont', { op: 'aura', atk: 200 }, { ar: 'راية الحرب', en: 'War Banner' },
+    { ar: 'سحر مستمر: يبقى على الساحة، وكل وحوشك تكسب 200 هجوم.', en: 'Continuous spell: stays on the field. All your monsters gain 200 ATK.' }),
+
   ward: T('attack', { op: 'negateDestroy' }, { ar: 'درع المرآة', en: 'Mirror Ward' },
     { ar: 'عندما يهاجم وحش الخصم: ألغِ الهجوم ودمّر ذلك الوحش.', en: 'When an opponent\'s monster attacks: cancel the attack and destroy that monster.' }),
   still: T('attack', { op: 'endBattle' }, { ar: 'سكون الريح', en: 'Still Air' },
     { ar: 'عندما يهاجم وحش الخصم: ألغِ الهجوم وأنهِ مرحلة المعركة.', en: 'When an opponent\'s monster attacks: cancel the attack and end the battle phase.' }),
   pit: T('summon', { op: 'destroySummoned' }, { ar: 'ختم الهاوية', en: 'Pitfall Seal' },
-    { ar: 'عندما يستدعي الخصم وحشاً هجومه 1500 أو أكثر: دمّره.', en: 'When your opponent summons a monster with 1500 or more ATK: destroy it.' }, 1500)
+    { ar: 'عندما يستدعي الخصم وحشاً هجومه 1500 أو أكثر: دمّره.', en: 'When your opponent summons a monster with 1500 or more ATK: destroy it.' }, 1500),
+  thornWall: T('attack', { op: 'weakenAttacker', n: 800 }, { ar: 'جدار الشوك', en: 'Thorn Wall' },
+    { ar: 'عندما يهاجم وحش الخصم: يخسر 800 هجوم نهائياً ثم تستمر المعركة.', en: 'When an opponent\'s monster attacks: it permanently loses 800 ATK, then the battle continues.' }),
+  reflectPrism: T('attack', { op: 'reflect' }, { ar: 'موشور الارتداد', en: 'Reflect Prism' },
+    { ar: 'عندما يهاجم وحش الخصم: ألغِ الهجوم والخصم يخسر نصف هجوم ذلك الوحش.', en: 'When an opponent\'s monster attacks: cancel the attack and your opponent loses half that monster\'s ATK.' }),
+  updraft: T('summon', { op: 'bounceSummoned' }, { ar: 'شرك التيار الصاعد', en: 'Updraft Snare' },
+    { ar: 'عندما يستدعي الخصم وحشاً هجومه 1000 أو أكثر: أعده إلى يده.', en: 'When your opponent summons a monster with 1000 or more ATK: return it to their hand.' }, 1000),
+  counterSeal: T('spell', { op: 'negateSpell' }, { ar: 'ختم الإبطال', en: 'Counter Seal' },
+    { ar: 'عندما يفعّل الخصم ورقة سحر: أبطلها ودمّرها.', en: 'When your opponent activates a spell: cancel it and destroy it.' })
 };
 
-/* The 40-card deck both players use: [card id, copies] */
-SD.DECKLIST = [
-  ['emberFox', 2], ['graniteSentinel', 2], ['tideDancer', 2], ['galeLancer', 2], ['duskBlade', 2], ['mossTurtle', 2],
-  ['lanternWisp', 1], ['scrollKeeper', 2], ['rustMoth', 1], ['mirrorLurker', 2], ['cinderHound', 2],
-  ['stormWyvern', 1], ['deepColossus', 1], ['dawnSeraph', 1], ['voidTyrant', 1],
-  ['kindle', 2], ['shatter', 2], ['gust', 2], ['mend', 1], ['recall', 1], ['whet', 2], ['scorch', 1],
-  ['ward', 2], ['still', 1], ['pit', 2]
-];
-SD.buildDeck = () => SD.DECKLIST.flatMap(([id, n]) => Array(n).fill(id));
+/* Decks: 40 cards each, written as [card id, copies]. "starter" is also the tutorial deck. */
+SD.DECKS = {
+  starter: { name: { ar: 'المتوازنة', en: 'Balanced' }, list: [
+    ['emberFox', 2], ['graniteSentinel', 2], ['tideDancer', 2], ['galeLancer', 2], ['duskBlade', 2], ['mossTurtle', 2],
+    ['lanternWisp', 1], ['scrollKeeper', 2], ['rustMoth', 1], ['mirrorLurker', 2], ['cinderHound', 2],
+    ['stormWyvern', 1], ['deepColossus', 1], ['dawnSeraph', 1], ['voidTyrant', 1],
+    ['kindle', 2], ['shatter', 2], ['gust', 2], ['mend', 1], ['recall', 1], ['whet', 2], ['scorch', 1],
+    ['ward', 2], ['still', 1], ['pit', 2]] },
+  ember: { name: { ar: 'لهب وعاصفة', en: 'Flame & Gale' }, list: [
+    ['emberFox', 2], ['cinderHound', 2], ['magmaBoar', 2], ['galeLancer', 2], ['twinTalon', 2], ['rustMoth', 2], ['zephyrSprite', 2],
+    ['thornBear', 1], ['scrollKeeper', 1], ['stormWyvern', 2], ['ashPhoenix', 2], ['dawnSeraph', 1],
+    ['kindle', 2], ['scorch', 2], ['emberRain', 1], ['rally', 2], ['shatter', 1], ['gust', 1], ['whet', 2], ['recall', 1],
+    ['ward', 2], ['thornWall', 2], ['pit', 1], ['counterSeal', 1], ['still', 1]] },
+  tide: { name: { ar: 'أعماق وصخر', en: 'Deep & Stone' }, list: [
+    ['tideDancer', 2], ['coralArcher', 2], ['frostSerpent', 2], ['graniteSentinel', 2], ['mossTurtle', 2], ['thornBear', 2], ['crystalBeetle', 1],
+    ['mirrorLurker', 1], ['scrollKeeper', 1], ['deepColossus', 2], ['tidalLeviathan', 2], ['starUnicorn', 2],
+    ['kindle', 2], ['undertow', 2], ['frostBind', 2], ['mend', 1], ['cataclysm', 1], ['warBanner', 1], ['shatter', 2], ['gust', 1],
+    ['still', 2], ['reflectPrism', 2], ['updraft', 2], ['ward', 1]] },
+  dusk: { name: { ar: 'نور وظلام', en: 'Light & Shadow' }, list: [
+    ['duskBlade', 2], ['graveRook', 2], ['nightStalker', 1], ['mirrorLurker', 2], ['sunPriest', 2], ['scrollKeeper', 2], ['lanternWisp', 2],
+    ['galeLancer', 1], ['graniteSentinel', 2], ['starUnicorn', 2], ['plagueLord', 1], ['dawnSeraph', 1], ['voidTyrant', 1],
+    ['kindle', 1], ['exchange', 2], ['shrinkHex', 2], ['scorch', 1], ['stormSweep', 1], ['recall', 2], ['shatter', 1], ['mend', 1], ['warBanner', 1],
+    ['counterSeal', 2], ['pit', 2], ['ward', 2], ['thornWall', 1]] }
+};
+SD.buildDeck = key => SD.DECKS[key || 'starter'].list.flatMap(([id, n]) => Array(n).fill(id));
 
 /* Tutorial: the first cards each side draws, in order */
 SD.TUTORIAL = {

@@ -2,7 +2,8 @@
 (function () {
   const SD = window.SD, app = document.getElementById('app'), fx = document.getElementById('fx');
   const store = { get(k, d) { try { return localStorage.getItem(k) || d; } catch (e) { return d; } }, set(k, v) { try { localStorage.setItem(k, v); } catch (e) { } } };
-  let lang = store.get('sd-lang', 'ar'), level = +store.get('sd-level', 1);
+  let lang = store.get('sd-lang', 'ar'), level = +store.get('sd-level', 1), deck = store.get('sd-deck', 'starter'), foeDeck = null;
+  if (!SD.DECKS[deck]) deck = 'starter';
   let screen = 'menu', mode = null, G = null, ai = null, sel = null, prompt = null, modal = null, busy = false, log = [], goals = null, libFilter = 'all';
   const GOALS = ['read', 'summon', 'spell', 'trapset', 'end', 'trapuse', 'tribute', 'attack', 'set'];
   const PHASES = ['draw', 'main1', 'battle', 'main2', 'end'];
@@ -29,10 +30,10 @@
     if (o.hidden) return `<div class="${cls.join(' ')} back" data-uid="${c.uid}" style="${st}"><div class="cf">${SD.backArt}</div></div>`;
     if (o.ownDown) cls.push('own-down');
     const col = d.kind === 'monster' ? SD.ATTR[d.attr].c : SD.KIND_COLOR[d.kind];
-    const kindLabel = d.kind === 'monster' ? `${SD.ATTR[d.attr][lang]} · ${t(d.fx ? 'effectM' : 'normalM')}` : t(d.kind === 'trap' ? 'kTrap' : d.sub === 'equip' ? 'kEquip' : 'kSpell');
+    const kindLabel = d.kind === 'monster' ? `${SD.ATTR[d.attr][lang]} · ${t(d.fx ? 'effectM' : 'normalM')}` : t(d.kind === 'trap' ? 'kTrap' : d.sub === 'equip' ? 'kEquip' : d.sub === 'cont' ? 'kCont' : 'kSpell');
     const atk = d.kind === 'monster' ? (G && o.field ? G.atkOf(c) : d.atk) : 0;
     const foot = d.kind === 'monster'
-      ? `<div class="c-stats"><b class="atk${atk > d.atk ? ' up' : ''}">${o.full ? `<i>${t('atk')}</i>` : ''}${atk}</b><b class="dfn">${o.full ? `<i>${t('def')}</i>` : ''}${d.def}</b></div>`
+      ? `<div class="c-stats"><b class="atk${atk > d.atk ? ' up' : atk < d.atk ? ' down' : ''}">${o.full ? `<i>${t('atk')}</i>` : ''}${atk}</b><b class="dfn">${o.full ? `<i>${t('def')}</i>` : ''}${d.def}</b></div>`
       : `<div class="c-stats one"><b>${t(d.kind === 'trap' ? 'kTrap' : 'kSpell')}</b></div>`;
     return `<div class="${cls.join(' ')}" data-uid="${c.uid}" style="${st}--c:${col}"><div class="cf">
       <div class="c-head"><span class="c-name">${d.name[lang]}</span>${d.kind === 'monster' ? `<span class="c-lvl">${d.lvl}</span>` : ''}</div>
@@ -58,6 +59,8 @@
         <button type="button" class="mbtn" data-act="duel"><b>${t('mDuel')}</b><span>${t('mDuelSub')}</span></button>
         <div class="seg" role="group" aria-label="${t('level')}"><span>${t('level')}</span>
           <button type="button" class="${level ? '' : 'on'}" data-act="lvl0">${t('easy')}</button><button type="button" class="${level ? 'on' : ''}" data-act="lvl1">${t('normal')}</button></div>
+        <div class="seg" role="group" aria-label="${t('deckPick')}"><span>${t('deckPick')}</span>
+          ${Object.keys(SD.DECKS).map(k => `<button type="button" class="${deck === k ? 'on' : ''}" data-act="deck-${k}">${SD.DECKS[k].name[lang]}</button>`).join('')}</div>
         <button type="button" class="mbtn" data-act="lib"><b>${t('mLib')}</b><span>${t('mLibSub')}</span></button>
       </div></main>`;
   }
@@ -105,7 +108,7 @@
     const mid = (me.hand.length - 1) / 2;
     const hand = `<div class="hand">${me.hand.map((c, i) => `<div class="slot" style="--r:${(i - mid).toFixed(1)}">${cardHTML(c, {})}</div>`).join('')}</div>`;
     const detail = `<aside class="detail">${sel ? cardHTML(sel, { full: true }) : `<p class="muted">${t('detailEmpty')}</p>`}</aside>`;
-    const logBox = `<aside class="logbox"><h3>${t('logTitle')}</h3><ol>${log.slice(-40).reverse().map(l => `<li class="${l.c}">${t(l.k, ...l.a.map(x => x && x.k ? t(x.k) : x && x.id ? SD.CARDS[x.id].name[lang] : x))}</li>`).join('')}</ol></aside>`;
+    const logBox = `<aside class="logbox"><h3>${t('logTitle')}</h3><ol>${log.slice(-40).reverse().map(l => `<li class="${l.c}">${t(l.k, ...l.a.map(x => x && x.k ? t(x.k) : x && x.id ? SD.CARDS[x.id].name[lang] : x && x.deck ? SD.DECKS[x.deck].name[lang] : x))}</li>`).join('')}</ol></aside>`;
     return `<main class="game ${mode}">
       <div class="bar"><button type="button" class="btn ghost" data-act="menu">${t('back')}</button><h2>${t(mode === 'tutorial' ? 'mTutorial' : 'mDuel')}</h2><button type="button" class="btn ghost" data-act="lang">${t('langBtn')}</button></div>
       ${mode === 'tutorial' ? coachHTML() : ''}
@@ -128,7 +131,7 @@
       if (w === 'm') {
         if (G.isMain(0) && sel.faceDown && sel.summonedTurn < G.turnCount) b.push(btn('flip', t('bFlip'), 'primary'));
         if (G.canChangePos(0, sel)) b.push(btn('pos', t('bPos')));
-        if (G.canAttack(0, sel)) b.push(btn('attack', t(G.mons(1).length ? 'bAttack' : 'bDirect'), 'primary'));
+        if (G.canAttack(0, sel)) { b.push(btn('attack', t(G.mons(1).length ? 'bAttack' : 'bDirect'), 'primary')); if (G.mons(1).length && (d.fx || {}).direct) b.push(btn('direct', t('bDirectFx'))); }
       }
     }
     const ph = [];
@@ -151,7 +154,7 @@
     let tip = next ? t('h_' + next) : t('allDone'), about = '';
     if (sel) {
       const d = D(sel), n = d.kind === 'monster' ? SD.tributes(d) : 0;
-      about = d.kind === 'monster' ? (n ? t('k_high', d.lvl, n) : t('k_low', d.lvl)) + (d.fx ? ' ' + t('k_fx') : '') : t(d.kind === 'trap' ? 'k_trap' : d.sub === 'equip' ? 'k_equip' : 'k_spell');
+      about = d.kind === 'monster' ? (n ? t('k_high', d.lvl, n) : t('k_low', d.lvl)) + (d.fx ? ' ' + t('k_fx') : '') : t(d.kind === 'trap' ? 'k_trap' : d.sub === 'equip' ? 'k_equip' : d.sub === 'cont' ? 'k_cont' : 'k_spell');
     }
     return `<aside class="coach"><h3>${t('coach')}</h3><p class="tip">${tip}</p>${about ? `<p class="about"><b>${cname(sel)}:</b> ${about}</p>` : ''}
       <h4>${t('goalsTitle')}</h4><ul class="goals">${GOALS.map(g => `<li class="${goals[g] ? 'done' : g === next ? 'next' : ''}">${t('g_' + g)}</li>`).join('')}</ul></aside>`;
@@ -184,10 +187,13 @@
       case 'pos': add('log_pos', [cn(d.card), { k: d.card.pos }]); break;
       case 'equip': add('log_equip', [cn(d.target), cn(d.card)]); break;
       case 'discard': add('log_discard', [who(d.p)]); break;
+      case 'guard': add('log_guard', [cn(d.card)], 'hl'); break;
+      case 'bounce': add('log_bounce', [nm(d.card)]); break;
+      case 'mod': d.card ? add('log_mod', [cn(d.card)]) : add('log_modAll'); break;
       case 'lp': add('log_lp', [who(d.p), (d.delta > 0 ? '+' : '') + d.delta], d.delta < 0 ? 'dmg' : 'heal'); break;
       case 'over': G.reason = d.reason; break;
     }
-    if (type === 'destroy' || type === 'tribute') ghost(d.card);
+    if (type === 'destroy' || type === 'tribute' || type === 'bounce') ghost(d.card);
     if (type === 'spell' || type === 'trap') fxNode('showcase', cardHTML(d.card, { full: true }), 1250);
     if (type === 'turn') fxNode('banner ' + (d.p ? 'foe' : ''), `<span>${t(d.p ? 'opp' : 'you')}</span><small>${t('turnN', G.turnCount)}</small>`, 1300);
     if (type === 'lp' && d.delta < 0 && !calm) app.animate([{ transform: 'translate(0)' }, { transform: 'translate(-7px,3px)' }, { transform: 'translate(6px,-3px)' }, { transform: 'translate(-4px,2px)' }, { transform: 'translate(0)' }], { duration: 320 });
@@ -231,8 +237,8 @@
       return out;
     },
     chooseTarget: (cands, why) => pick(cands, t('pick_' + why), false, why === 'revive'),
-    confirmTrap: (card, ctx) => new Promise(resolve => { prompt = { confirm: true, card, msg: t(ctx.attacker ? 'trapAskAttack' : 'trapAskSummon', cname(ctx.attacker || ctx.card), cname(card)), resolve }; render(); }),
-    chooseDiscard: hand => pick(hand, t('pickDiscard'), false)
+    confirmTrap: (card, ctx) => new Promise(resolve => { prompt = { confirm: true, card, msg: t(ctx.attacker ? 'trapAskAttack' : ctx.spell ? 'trapAskSpell' : 'trapAskSummon', cname(ctx.attacker || ctx.card), cname(card)), resolve }; render(); }),
+    chooseDiscard: hand => pick(hand, t(hand.length > SD.HAND_LIMIT ? 'pickDiscard' : 'pickCycle'), false)
   };
   function answer(v) { const r = prompt.resolve; prompt = null; render(); r(v); }
 
@@ -250,9 +256,10 @@
     if (m === 'tutorial') {
       lv = 0;
       decks = ['you', 'opp'].map(k => { const rest = SD.buildDeck(); for (const id of SD.TUTORIAL[k]) rest.splice(rest.indexOf(id), 1); return [...SD.shuffle(rest), ...[...SD.TUTORIAL[k]].reverse()]; });
-    } else { decks = [SD.shuffle(SD.buildDeck()), SD.shuffle(SD.buildDeck())]; first = Math.random() < .5 ? 0 : 1; }
+    } else { const ks = Object.keys(SD.DECKS); foeDeck = ks[Math.floor(Math.random() * ks.length)]; decks = [SD.shuffle(SD.buildDeck(deck)), SD.shuffle(SD.buildDeck(foeDeck))]; first = Math.random() < .5 ? 0 : 1; }
     const ctrl = [human]; appear.clear(); G = new SD.Game({ decks, ctrl, first, onEvent, onAnim });
     ai = SD.AI(G, 1, lv); ctrl.push(ai);
+    if (m === 'duel') log.push({ k: 'vsDeck', a: [{ deck: foeDeck }], c: 'hl' });
     G.start();
     if (G.turn === 1) run(aiTurn);
   }
@@ -269,6 +276,7 @@
     activate() { const c = sel; run(() => G.playSpell(0, c)); }, setst() { const c = sel; run(async () => G.setCard(0, c)); },
     flip() { const c = sel; run(() => G.flipSummon(0, c)); }, pos() { const c = sel; run(async () => G.changePos(0, c)); },
     attack() { const a = sel; run(async () => { let tg = null; if (G.mons(1).length) { tg = await pick(G.mons(1), t('pickTarget'), true); if (!tg) return; } await G.attack(0, a, tg); }); },
+    direct() { const a = sel; run(() => G.attack(0, a, null)); },
     next() { run(async () => G.nextPhase(0)); },
     end() { run(async () => { sel = null; await G.endTurn(0); if (!G.over) await aiTurn(); }); }
   };
@@ -278,7 +286,7 @@
     if (b && !(cEl && b.classList.contains('modal'))) {
       const a = b.dataset.act;
       if (a === 'closeModal' && b.classList.contains('modal') && e.target !== b) return;
-      if (a.startsWith('f-')) libFilter = a.slice(2); else if (acts[a]) acts[a]();
+      if (a.startsWith('f-')) libFilter = a.slice(2); else if (a.startsWith('deck-')) { deck = a.slice(5); store.set('sd-deck', deck); } else if (acts[a]) acts[a]();
       render(); return;
     }
     if (!cEl || screen !== 'game') return;

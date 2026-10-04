@@ -39,7 +39,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .c-stats b { flex: 1; text-align: center; border-radius: 2.5cqw; color: #fff; }
 .c-stats i { font-style: normal; font-size: .72em; opacity: .85; margin-inline-end: .5em; }
 .atk { background: var(--atk); } .dfn { background: var(--dfn); }
-.atk.up { box-shadow: 0 0 0 1cqw var(--good); }
+.atk.up { box-shadow: 0 0 0 1.2cqw var(--good); } .atk.down { box-shadow: 0 0 0 1.2cqw #000, 0 0 0 2.2cqw var(--bad); }
 .c-stats.one b { background: color-mix(in srgb, var(--c) 80%, #000); }
 .card.def .atk, .card.isatk .dfn { opacity: .42; }
 .mini .c-head { display: none; }

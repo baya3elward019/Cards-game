@@ -97,7 +97,57 @@
       <path class="m2" d="M18 94L28 56Q50 44 72 56L82 94Z"/><path class="m1" d="M34 94L40 60Q50 56 60 60L66 94Z"/><path class="m1" d="M28 58L12 42L34 52ZM72 58L88 42L66 52Z"/>
       <path class="m3" d="M38 36Q26 30 28 10Q36 24 44 28ZM62 36Q74 30 72 10Q64 24 56 28Z"/><path class="m2" d="M36 38Q50 22 64 38L60 56Q50 64 40 56Z"/>
       <g class="a-pulse"><path class="gl" d="M40 42L47 44L41 47ZM60 42L53 44L59 47Z"/><ellipse class="gl" cx="50" cy="35" rx="1.6" ry="3.2"/></g><path class="sk" d="M45 54H55"/>
-      <circle class="gl a-pulse" style="--d:-1s" cx="50" cy="72" r="3"/>`
+      <circle class="gl a-pulse" style="--d:-1s" cx="50" cy="72" r="3"/>`,
+    magmaBoar: `<path class="m1 a-flick" d="M30 34C28 22 36 20 38 12C44 20 46 16 50 8C54 16 56 20 62 12C64 20 72 22 70 34Z"/><path class="m2" d="M24 40L18 26L36 34ZM76 40L82 26L64 34Z"/>
+      <path class="m2" d="M22 50Q22 30 50 30Q78 30 78 50Q80 74 50 84Q20 74 22 50Z"/><ellipse class="m1" cx="50" cy="66" rx="16" ry="12"/><ellipse class="dk" cx="44" cy="66" rx="2.5" ry="3.5"/><ellipse class="dk" cx="56" cy="66" rx="2.5" ry="3.5"/>
+      <path class="wh" d="M30 68Q22 56 27 44Q32 56 37 63ZM70 68Q78 56 73 44Q68 56 63 63Z"/><g class="a-pulse"><path class="gl" d="M34 46L44 49L35 52ZM66 46L56 49L65 52Z"/></g>
+      <path class="hl a-pulse" style="--d:-.6s" d="M50 34V42L46 48M27 56L31 60M73 56L69 60"/>${spark(18, 80, 1.5, 0)}${spark(84, 76, 1.3, -1.2)}`,
+    ashPhoenix: `${both('<path class="m1 a-flap" d="M44 50C30 44 16 30 10 12C22 18 26 14 30 20C32 14 40 22 44 36Z"/><path class="gl a-flap" style="--d:-.2s" d="M44 50C34 46 24 36 20 24C28 28 32 28 36 34C38 32 42 38 44 44Z"/>')}
+      <path class="m1 a-flick" d="M44 70C40 82 44 90 50 97C56 90 60 82 56 70Z"/><path class="gl a-flick" style="--d:-.2s" d="M47 72C46 80 48 84 50 89C52 84 54 80 53 72Z"/>
+      <ellipse class="m3" cx="50" cy="58" rx="9" ry="15"/><circle class="m1" cx="50" cy="38" r="8"/><path class="gl" d="M45 31L47 18L51 27L56 16L55 31Z"/><path class="gl" d="M47 41H53L50 48Z"/>${eyes(46.5, 53.5, 37, 1.4)}${spark(22, 70, 1.5, -.3)}${spark(80, 62, 1.3, -1.4)}`,
+    coralArcher: `<path class="st" style="stroke-width:3" d="M70 18Q90 50 70 82"/><path class="hl" style="stroke-width:1" d="M70 18V82"/>
+      <path class="m1 a-sway" d="M44 60Q36 76 46 88L36 97H60L52 88Q58 76 54 60Z"/><path class="m3" d="M42 40H58L55 62H45Z"/><path class="st" style="stroke-width:3" d="M56 46L70 50M44 46L60 51"/>
+      <path class="wh" d="M34 49H80V51H34ZM80 46L89 50L80 54Z"/><circle class="m3" cx="50" cy="30" r="8"/><path class="m1" d="M41 31Q41 18 52 18Q63 19 60 36Q57 25 49 24Q44 26 41 31Z"/>${eyes(47, 53, 31, 1.2)}
+      ${spark(22, 66, 2, 0, 'm3')}${spark(28, 40, 1.4, -1.2, 'm3')}`,
+    frostSerpent: `<path class="st" style="stroke-width:11" d="M30 88Q70 88 66 70Q62 56 40 58Q22 60 28 42Q32 32 46 30"/><path class="sk" style="stroke-width:2;stroke-dasharray:1 7" d="M30 88Q70 88 66 70Q62 56 40 58Q22 60 28 42Q32 32 46 30"/>
+      <path class="m1" d="M42 20Q60 12 72 26Q74 35 62 39Q48 40 42 32Z"/><path class="wh" d="M60 38L62 46L65 37Z"/><path class="hl a-pulse" style="stroke-width:1.5" d="M72 30L81 27M72 30L81 34"/>
+      <circle class="gl" cx="60" cy="25" r="2.6"/><ellipse class="dk a-blink" cx="60" cy="25" rx=".9" ry="2.2"/>
+      <path class="m3 a-pulse" d="M14 70L18 60L22 70L18 76Z"/><path class="m3 a-pulse" style="--d:-.8s" d="M80 54L84 46L88 54L84 60Z"/><path class="wh a-pulse" style="--d:-.4s" d="M82 82L85 76L88 82L85 86Z"/>`,
+    tidalLeviathan: `<path class="m3 a-sway" d="M36 62L22 54L34 74Z"/><path class="m3 a-sway" style="--d:-1s" d="M38 46L26 36L40 54Z"/>
+      <path class="m1" d="M34 98Q26 60 40 40Q48 28 62 30L66 44Q54 42 50 52Q44 70 54 98Z"/><path class="m3" d="M42 98Q36 66 46 48L50 52Q44 70 54 98Z"/>
+      <path class="m3" d="M56 24L48 9L62 20ZM64 20L63 5L71 18Z"/><path class="m1" d="M52 22Q72 14 86 30Q88 40 78 43H60Q50 36 52 22Z"/><path class="m2" d="M62 41H83L78 48H62Z"/>
+      <path class="wh" d="M64 41L66 45L68 41ZM70 41L72 45L74 41ZM76 41L78 45L80 41Z"/><circle class="gl a-pulse" cx="70" cy="28" r="3.2"/><circle class="dk" cx="71" cy="28" r="1.3"/>
+      <path class="wv a-wave" d="M-6 90Q4 82 14 90T34 90T54 90T74 90T94 90T114 90V104H-6Z"/>${spark(18, 40, 1.6, 0, 'm3')}${spark(84, 70, 1.3, -1.3, 'm3')}`,
+    thornBear: `<path class="mg" d="M12 86L21 60L28 78L34 56L40 82ZM88 86L79 60L72 78L66 56L60 82Z"/><path class="m2" d="M22 98Q22 60 50 60Q78 60 78 98Z"/>
+      <circle class="m1" cx="32" cy="30" r="8"/><circle class="m1" cx="68" cy="30" r="8"/><circle class="m2" cx="32" cy="30" r="4"/><circle class="m2" cx="68" cy="30" r="4"/>
+      <ellipse class="m1" cx="50" cy="48" rx="24" ry="22"/><ellipse class="m3" cx="50" cy="57" rx="10" ry="8"/><path class="dk" d="M46 53H54L50 58Z"/><path class="sk" d="M50 58V61M45 62Q50 66 55 62M60 34L66 41"/>${eyes(40, 60, 44, 2.4)}`,
+    crystalBeetle: `<path class="st" d="M30 44L16 36M28 58L12 60M32 72L18 82M70 44L84 36M72 58L88 60M68 72L82 82M44 24L36 14M56 24L64 14"/>
+      <path class="m2" d="M46 26L50 6L54 26Z"/><ellipse class="m2" cx="50" cy="30" rx="10" ry="8"/><ellipse class="m1" cx="50" cy="58" rx="22" ry="28"/><path class="sk" d="M50 32V86"/>
+      <path class="m3 a-pulse" d="M36 54L41 40L46 54L41 62Z"/><path class="wh a-pulse" style="--d:-.5s" d="M54 60L59 46L64 60L59 68Z"/><path class="m3 a-pulse" style="--d:-1s" d="M40 74L44 64L48 74L44 80Z"/>
+      <circle class="gl" cx="46" cy="29" r="1.6"/><circle class="gl" cx="54" cy="29" r="1.6"/><path class="shine a-wave" d="M30 46L35 42L32 76L28 70Z"/>`,
+    twinTalon: `${both('<path class="m1 a-flap" d="M42 46L6 30L16 46L8 52L20 56L14 64L42 58Z"/>')}<ellipse class="m2" cx="50" cy="54" rx="11" ry="16"/><path class="m3" d="M45 50H55L53 64H47Z"/>
+      ${both('<circle class="m1" cx="40" cy="32" r="8"/><path class="gl" d="M36 33L27 38L37 39Z"/><circle class="dk a-blink" cx="38" cy="30" r="1.5"/><path class="m3" d="M40 24L38 13L45 23Z"/><path class="gl" d="M42 68L36 84L40 80L42 89L44 80L48 84L46 68Z"/>')}`,
+    zephyrSprite: `<path class="st a-spin" style="animation-duration:7s" d="M50 10A40 40 0 0 1 90 50M50 90A40 40 0 0 1 10 50"/>
+      ${both('<path class="m3 a-flap" d="M46 46C34 28 16 30 14 42C16 52 34 54 46 50Z"/><path class="m1 a-flap" style="--d:-.15s" d="M46 52C34 54 26 64 32 72C40 74 46 62 46 56Z"/>')}
+      <path class="m1" d="M50 44C44 54 44 66 50 80C56 66 56 54 50 44Z"/><circle class="m3" cx="50" cy="36" r="8"/><path class="m1" d="M42 35Q45 22 56 26L61 19L58 35Q52 28 42 35Z"/>${eyes(47, 53, 37, 1.3)}`,
+    sunPriest: `<path class="st" style="stroke-width:3" d="M74 30V94"/><circle class="gl a-pulse" cx="74" cy="20" r="8"/><path class="hl" d="M74 5V9M74 31V35M59 20H63M85 20H89M63 9L66 12M85 9L82 12"/>
+      <path class="m1" d="M46 36C34 50 30 76 26 96H66C62 76 58 50 46 36Z"/><path class="wh" d="M43 46H49L52 96H40Z"/><path class="st" style="stroke-width:4" d="M52 50L73 52"/>
+      <circle class="m3" cx="46" cy="28" r="8"/><path class="m2" d="M36 29Q38 14 46 14Q54 14 56 29Q50 20 46 20Q42 20 36 29Z"/>${eyes(43, 49, 29, 1.2)}${spark(18, 60, 1.4, -.5)}${spark(88, 60, 1.2, -1.6)}`,
+    starUnicorn: `<path class="m3 a-sway" d="M62 30C80 34 82 56 72 78C72 60 66 48 58 44Z"/><path class="m1" d="M36 30L32 12L46 26ZM64 30L68 12L54 26Z"/>
+      <path class="gl" d="M46 24L50 2L54 24Z"/><path class="sk" d="M48 18L52 16M47.5 12L51.5 10"/><path class="wh" d="M34 34Q50 20 66 34L60 70Q50 84 40 70Z"/>
+      <path class="m3" d="M41 64Q50 60 59 64L57 72Q50 80 43 72Z"/><circle class="dk" cx="46" cy="70" r="1.3"/><circle class="dk" cx="54" cy="70" r="1.3"/>${eyes(42, 58, 44, 2.4)}
+      <path class="gl a-pulse" d="M18 30L20 24L22 30L28 32L22 34L20 40L18 34L12 32Z"/><path class="gl a-pulse" style="--d:-.8s" d="M80 82L81.5 77L83 82L88 83.5L83 85L81.5 90L80 85L75 83.5Z"/>`,
+    graveRook: `<circle class="m3" cx="22" cy="22" r="10" opacity=".45"/><path class="m2" d="M24 98V68Q24 54 40 54Q56 54 56 68V98Z"/><path class="st" d="M40 64V80M34 70H46"/>
+      <path class="m2" d="M48 54L34 60L46 47Z"/><path class="m1" d="M46 54Q44 32 60 28Q74 28 74 44Q72 56 58 58Z"/><path class="m2 a-flap" style="transform-origin:100% 0" d="M52 40Q42 52 46 66Q56 60 62 46Z"/>
+      <circle class="m1" cx="66" cy="26" r="9"/><path class="gl" d="M73 23L87 28L73 31Z"/><circle class="gl a-pulse" cx="67" cy="24" r="2.2"/><path class="hl" style="stroke-width:1.5" d="M56 58V63M62 57V63"/>`,
+    nightStalker: `<path class="m1" d="M28 40L24 14L44 30ZM72 40L76 14L56 30Z"/><path class="m2" d="M30 34L29 22L38 30ZM70 34L71 22L62 30Z"/>
+      <path class="m2" d="M22 98Q22 82 34 82Q44 82 44 98ZM56 98Q56 82 66 82Q78 82 78 98Z"/><path class="m1" d="M24 46Q50 22 76 46Q78 66 50 78Q22 66 24 46Z"/>
+      <g class="a-blink"><path class="gl" d="M32 48Q39 40 46 50Q38 54 32 48ZM68 48Q61 40 54 50Q62 54 68 48Z"/></g><ellipse class="dk" cx="39" cy="48" rx="1.2" ry="3.4"/><ellipse class="dk" cx="61" cy="48" rx="1.2" ry="3.4"/>
+      <path class="m3" d="M46 58H54L50 63Z"/><path class="sk" d="M50 63V67M44 69Q50 72 56 69"/><path class="st" style="stroke-width:1" d="M30 62L14 58M30 66L14 68M70 62L86 58M70 66L86 68"/><path class="wh" d="M45 69L46.5 76L48 70ZM55 69L53.5 76L52 70Z"/>`,
+    plagueLord: `<path class="m2" d="M16 98L26 54Q50 40 74 54L84 98Z"/><path class="m1" d="M36 98L42 60H58L64 98Z"/><path class="gl" d="M36 21L38 8L44 16L50 4L56 16L62 8L64 21Z"/>
+      <path class="wh" d="M34 34Q34 16 50 16Q66 16 66 34Q66 44 60 48V57H40V48Q34 44 34 34Z"/><ellipse class="dk" cx="43" cy="34" rx="5" ry="6"/><ellipse class="dk" cx="57" cy="34" rx="5" ry="6"/>
+      <g class="a-pulse"><circle class="mg" cx="43" cy="35" r="2.2"/><circle class="mg" cx="57" cy="35" r="2.2"/></g><path class="dk" d="M48 43L50 38L52 43Z"/><path class="sk" d="M44 50V57M48 50V57M52 50V57M56 50V57"/>
+      ${spark(20, 70, 2.4, 0, 'mg')}${spark(82, 60, 2, -.9, 'mg')}${spark(28, 40, 1.6, -1.7, 'mg')}${spark(74, 86, 1.8, -2.2, 'mg')}`
   };
 
   SD.art = function (id, color) {
