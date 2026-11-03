@@ -10,12 +10,82 @@
   const appear = new Map(), calm = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   const t = (k, ...a) => { let s = SD.STR[lang][k]; if (typeof s !== 'string') return s; a.forEach((v, i) => s = s.replace('{' + i + '}', v)); return s; };
-  const D = c => SD.CARDS[c.id], cname = c => D(c).name[lang];
+  const D = c => SD.def(c), cname = c => D(c).name[lang];
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   const btn = (act, label, cls = '') => `<button type="button" class="btn ${cls}" data-act="${act}">${label}</button>`;
 
+  let online = null, netPromptId = null, netBusy = false;
+  let roomInput = new URLSearchParams(location.search).get('room') || '';
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  function lobbyHTML() {
+    return `<main class="menu"><div class="bar">${btn('menu', t('back'))}${btn('lang', t('langBtn'))}</div>
+      <h1>${t('online')}</h1><p>${t('onlineIntro')}</p>
+      <label>${t('deckPick')}<select id="online-deck" ${online?.code ? 'disabled' : ''}>${Object.keys(SD.DECKS).map(k => `<option value="${k}" ${k === deck ? 'selected' : ''}>${SD.DECKS[k].name[lang]}</option>`).join('')}</select></label>
+      ${online?.code ? `<p>${t('roomCode')}</p><strong class="room-code">${esc(online.code)}</strong>
+        <div class="btns">${btn('copyInvite', t('copyInvite'), 'primary')}</div>
+        <input aria-label="${t('inviteLink')}" readonly value="${esc(inviteLink())}">` : `<div class="btns">${btn('createRoom', t('createRoom'), 'primary')}</div>
+        <label for="room-code">${t('roomCode')}</label><input id="room-code" maxlength="6" autocomplete="off" placeholder="ABC123" value="${esc(roomInput)}" dir="ltr">
+        <div class="btns">${btn('joinRoom', t('joinRoom'))}</div>`}
+      <p role="status">${t(online?.status || 'onlineHint')}</p></main>`;
+  }
+  function inviteLink() { const url = new URL(location.href); url.search = ''; url.searchParams.set('room', online.code); return url.href; }
+  function closeOnline() { const old = online; online = null; netPromptId = null; netBusy = false; if (old) { clearTimeout(old.retry); old.ws?.close(); } try { sessionStorage.removeItem('sd-room'); } catch {} }
+  function connectOnline(request) {
+    if (location.protocol === 'file:') { online = { status: 'onlineServer' }; render(); return; }
+    const session = online || (online = {}); session.status = 'connecting'; render();
+    const ws = session.ws = new WebSocket(`${location.protocol === 'https:' ? 'wss:' : 'ws:'}//${location.host}/ws`);
+    ws.onopen = () => { if (online === session) ws.send(JSON.stringify(request)); };
+    ws.onmessage = event => {
+      if (online !== session) return;
+      const m = JSON.parse(event.data);
+      if (m.type === 'joined') { session.code = m.code; session.token = m.token; session.status = 'waitingFriend'; try { sessionStorage.setItem('sd-room', JSON.stringify({ code: m.code, token: m.token })); } catch {} }
+      if (m.type === 'waiting') { screen = 'lobby'; session.status = 'waitingFriend'; }
+      if (m.type === 'error') {
+        session.status = G && screen === 'game' ? 'connected' : 'net_' + m.code; netBusy = false;
+        if (m.code === 'expired') { closeOnline(); online = { status: 'net_expired' }; screen = 'lobby'; G = null; prompt = null; }
+        else if (!session.token) { ws.onclose = null; ws.close(); }
+      }
+      if (m.type === 'state') {
+        const oldSel = sel?.uid;
+        G = Object.assign(Object.create(SD.Game.prototype), m.state);
+        log = m.state.log || [];
+        mode = 'online'; screen = 'game'; busy = m.state.busy; netBusy = false;
+        session.status = m.state.opponentConnected ? 'connected' : 'reconnectingFriend';
+        if (!busy || G.over) { prompt = null; netPromptId = null; }
+        sel = oldSel ? findCard(oldSel) : null;
+      }
+      if (m.type === 'prompt' && netPromptId !== m.id) { netPromptId = m.id; handleOnlinePrompt(m, session); }
+      render();
+    };
+    ws.onerror = () => { if (online === session) { session.status = 'onlineServer'; render(); } };
+    ws.onclose = () => {
+      if (online !== session) return;
+      session.status = session.token ? 'reconnecting' : 'onlineServer'; netBusy = true; prompt = null; netPromptId = null; render();
+      if (session.token) session.retry = setTimeout(() => connectOnline({ type: 'resume', code: session.code, token: session.token }), 2000);
+    };
+  }
+  async function handleOnlinePrompt(m, session) {
+    let value;
+    if (m.kind === 'trap') value = await new Promise(resolve => { prompt = { confirm: true, card: m.cards[0], msg: t('onlineTrap'), resolve }; });
+    else if (m.kind === 'tribute') {
+      const picks = await human.chooseTributes(m.cards, m.n); value = picks ? picks.map(c => c.uid) : null;
+    } else {
+      const c = await pick(m.cards, t(m.kind === 'discard' ? 'pickDiscard' : 'pick_' + m.why), false, true); value = c.uid;
+    }
+    if (online === session && session.ws.readyState === WebSocket.OPEN) session.ws.send(JSON.stringify({ type: 'answer', id: m.id, value }));
+  }
+  async function onlineAction(action) {
+    if (!G || G.over || G.turn !== 0 || busy || netBusy || online.ws?.readyState !== WebSocket.OPEN || online.status === 'reconnectingFriend') return;
+    const c = sel; let target = null;
+    netBusy = true;
+    if (action === 'attack' && G.mons(1).length) { target = await pick(G.targets(0, c), t('pickTarget'), true); if (!target) { netBusy = false; render(); return; } }
+    if (!online || online.ws.readyState !== WebSocket.OPEN) { netBusy = false; return; }
+    online.ws.send(JSON.stringify({ type: 'action', action, uid: c?.uid, target: target?.uid })); render();
+  }
+
   /* ---------- cards ---------- */
   function cardHTML(c, o = {}) {
+    if (c.hidden) return `<div class="card back ${o.mini ? 'mini' : ''}" data-uid="${c.uid}"><div class="cf">${SD.backArt}</div></div>`;
     const d = D(c), cls = ['card', 'k-' + d.kind];
     if (o.full) cls.push('full'); if (o.mini) cls.push('mini'); if (d.kind === 'monster' && d.lvl >= 5) cls.push('foil');
     if (o.field && d.kind === 'monster') cls.push(c.pos === 'def' ? 'def' : 'isatk');
@@ -55,6 +125,7 @@
       <div class="menu-top"><button type="button" class="btn ghost" data-act="lang">${t('langBtn')}</button></div>
       <div class="hero"><div class="fan-wrap">${fan}</div><div><h1>${t('title')}</h1><p class="tag">${t('tagline')}</p></div></div>
       <div class="menu-list">
+        <button type="button" class="mbtn" data-act="online"><b>${t('online')}</b><span>${t('onlineIntro')}</span></button>
         <button type="button" class="mbtn" data-act="tutorial"><b>${t('mTutorial')}</b><span>${t('mTutorialSub')}</span></button>
         <button type="button" class="mbtn" data-act="duel"><b>${t('mDuel')}</b><span>${t('mDuelSub')}</span></button>
         <div class="seg" role="group" aria-label="${t('level')}"><span>${t('level')}</span>
@@ -110,7 +181,8 @@
     const detail = `<aside class="detail">${sel ? cardHTML(sel, { full: true }) : `<p class="muted">${t('detailEmpty')}</p>`}</aside>`;
     const logBox = `<aside class="logbox"><h3>${t('logTitle')}</h3><ol>${log.slice(-40).reverse().map(l => `<li class="${l.c}">${t(l.k, ...l.a.map(x => x && x.k ? t(x.k) : x && x.id ? SD.CARDS[x.id].name[lang] : x && x.deck ? SD.DECKS[x.deck].name[lang] : x))}</li>`).join('')}</ol></aside>`;
     return `<main class="game ${mode}">
-      <div class="bar"><button type="button" class="btn ghost" data-act="menu">${t('back')}</button><h2>${t(mode === 'tutorial' ? 'mTutorial' : 'mDuel')}</h2><button type="button" class="btn ghost" data-act="lang">${t('langBtn')}</button></div>
+      <div class="bar"><button type="button" class="btn ghost" data-act="menu">${t('back')}</button><h2>${t(mode === 'online' ? 'online' : mode === 'tutorial' ? 'mTutorial' : 'mDuel')}</h2><button type="button" class="btn ghost" data-act="lang">${t('langBtn')}</button></div>
+      ${mode === 'online' ? `<p class="network-status" role="status">${t(online.status)} · ${t('roomCode')}: ${esc(online.code)}</p>` : ''}
       ${mode === 'tutorial' ? coachHTML() : ''}
       <div class="table">${board}<div class="actions" aria-live="polite">${actionsHTML()}</div>${hand}</div>
       ${detail}${logBox}</main>${modalHTML()}`;
@@ -119,7 +191,7 @@
   function actionsHTML() {
     if (G.over) return `<p class="result ${G.winner ? 'bad' : 'good'}"><b>${t(G.winner ? 'lose' : 'win')}</b> ${t('r_' + G.reason)}</p><div class="btns">${btn('again', t('again'), 'primary')}${btn('menu', t('back'))}</div>`;
     if (prompt && prompt.ids && !prompt.modal) return `<p class="ask">${prompt.msg}</p><div class="btns">${prompt.cancel ? btn('cancel', t('cancel')) : ''}</div>`;
-    if (G.turn !== 0 || busy) return `<p class="muted">${G.turn ? t('oppTurn') : '…'}</p>`;
+    if (G.turn !== 0 || busy || netBusy || mode === 'online' && online?.status !== 'connected') return `<p class="muted">${G.turn ? t('oppTurn') : '…'}</p>`;
     const b = [];
     if (sel && sel.owner === 0) {
       const d = D(sel), w = G.where(sel);
@@ -271,10 +343,14 @@
   }
 
   const acts = {
+    online() { screen = 'lobby'; },
+    createRoom() { if (online?.ws?.readyState <= 1) return; connectOnline({ type: 'create', deck }); },
+    joinRoom() { if (online?.ws?.readyState <= 1) return; if (!/^[a-z0-9]{6}$/i.test(roomInput.trim())) { online = { status: 'net_notFound' }; return; } connectOnline({ type: 'join', deck, code: roomInput.trim() }); },
+    async copyInvite() { try { await navigator.clipboard.writeText(inviteLink()); online.status = 'copied'; } catch { online.status = 'copyManual'; } render(); },
     lang() { lang = lang === 'ar' ? 'en' : 'ar'; store.set('sd-lang', lang); },
     lvl0() { level = 0; store.set('sd-level', 0); }, lvl1() { level = 1; store.set('sd-level', 1); },
-    tutorial() { newGame('tutorial'); }, duel() { newGame('duel'); }, again() { newGame(mode); },
-    lib() { screen = 'lib'; }, menu() { if (prompt) prompt = null; G = null; screen = 'menu'; },
+    tutorial() { newGame('tutorial'); }, duel() { newGame('duel'); }, again() { if (mode === 'online') { closeOnline(); G = null; screen = 'lobby'; } else newGame(mode); },
+    lib() { screen = 'lib'; }, menu() { closeOnline(); if (prompt) prompt = null; G = null; screen = 'menu'; },
     gy0() { modal = { title: t('gyOf', t('you')), cards: G.P[0].gy }; }, gy1() { modal = { title: t('gyOf', t('opp')), cards: G.P[1].gy }; },
     closeModal() { modal = null; },
     cancel() { answer(null); }, yes() { answer(true); }, no() { answer(false); },
@@ -292,7 +368,7 @@
     if (b && !(cEl && b.classList.contains('modal'))) {
       const a = b.dataset.act;
       if (a === 'closeModal' && b.classList.contains('modal') && e.target !== b) return;
-      if (a.startsWith('f-')) libFilter = a.slice(2); else if (a.startsWith('deck-')) { deck = a.slice(5); store.set('sd-deck', deck); } else if (acts[a]) acts[a]();
+      if (a.startsWith('f-')) libFilter = a.slice(2); else if (a.startsWith('deck-')) { deck = a.slice(5); store.set('sd-deck', deck); } else if (mode === 'online' && screen === 'game' && ['summon','setm','activate','setst','flip','pos','attack','direct','next','end'].includes(a)) onlineAction(a); else if (acts[a]) acts[a]();
       render(); return;
     }
     if (!cEl || screen !== 'game') return;
@@ -309,9 +385,13 @@
     document.title = t('title'); document.body.dataset.arena = arenaNow();
     const y = window.scrollY;
     app.style.setProperty('--t', -Math.round(performance.now()) + 'ms'); /* keeps looping art in phase across re-renders */
-    app.innerHTML = screen === 'menu' ? menuHTML() : screen === 'lib' ? libHTML() : gameHTML();
+    app.innerHTML = screen === 'menu' ? menuHTML() : screen === 'lobby' ? lobbyHTML() : screen === 'lib' ? libHTML() : gameHTML();
     window.scrollTo(0, y);
   }
+  document.addEventListener('input', e => { if (e.target.id === 'room-code') roomInput = e.target.value; });
+  document.addEventListener('change', e => { if (e.target.id === 'online-deck') { deck = e.target.value; store.set('sd-deck', deck); } });
+  if (roomInput) screen = 'lobby';
+  try { const saved = JSON.parse(sessionStorage.getItem('sd-room')); if (saved?.token && (!roomInput || roomInput.toUpperCase() === saved.code)) { online = saved; screen = 'lobby'; setTimeout(() => connectOnline({ type: 'resume', ...saved }), 0); } } catch {}
   /* drifting background particles; their look comes from body[data-arena] in the CSS */
   const bg = document.createElement('div'); bg.id = 'bg';
   for (let i = 0; i < 26; i++) { const r = Math.random; bg.insertAdjacentHTML('beforeend', `<i style="--x:${(r() * 100).toFixed(1)}%;--y:${(r() * 100).toFixed(1)}%;--s:${(.5 + r()).toFixed(2)};--dur:${(7 + r() * 9).toFixed(1)}s;--del:-${(r() * 16).toFixed(1)}s"></i>`); }

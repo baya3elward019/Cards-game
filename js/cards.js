@@ -23,6 +23,30 @@ const S = (sub, fx, name, text) => ({ kind: 'spell', sub, fx, name, text });
 const T = (trigger, fx, name, text, min) => ({ kind: 'trap', trigger, fx, name, text, min: min || 0 });
 
 SD.CARDS = {
+  cometDrake: M(6, 2300, 1700, 'fire', { ar: 'تنين المذنب', en: 'Comet Drake' },
+    { ar: 'يحتاج تضحية واحدة. عند استدعائه مكشوفاً: الخصم يخسر 700 نقطة.', en: 'Needs 1 tribute. When summoned face-up: your opponent loses 700 LP.' }, { on: 'summon', op: 'burn', n: 700 }),
+  glacierOwl: M(3, 1000, 1700, 'water', { ar: 'بومة الجليد', en: 'Glacier Owl' },
+    { ar: 'عند قلبها مكشوفة: تكسب 800 نقطة حياة.', en: 'When flipped face-up: gain 800 LP.' }, { on: 'flip', op: 'heal', n: 800 }),
+  rootWarden: M(4, 1400, 2000, 'earth', { ar: 'حارس الجذور', en: 'Root Warden' },
+    { ar: 'استفزاز: ما دام مكشوفاً، وحوش الخصم لا تهاجم غيره.', en: 'Taunt: while face-up, opposing monsters must attack this card first.' }, { on: 'cont', taunt: true }),
+  skyMantis: M(4, 1600, 900, 'wind', { ar: 'سرعوف السماء', en: 'Sky Mantis' },
+    { ar: 'عندما يدمّر وحشاً في معركة: اسحب ورقة.', en: 'When it destroys a monster by battle: draw 1 card.' }, { on: 'kill', op: 'draw', n: 1 }),
+  auroraLion: M(7, 2600, 2300, 'light', { ar: 'أسد الشفق', en: 'Aurora Lion' },
+    { ar: 'يحتاج تضحيتين. مرة في كل دور: لا يُدمّر في المعركة.', en: 'Needs 2 tributes. Once per turn: survives destruction by battle.' }, { on: 'cont', guard: true }),
+  eclipseWeaver: M(4, 1300, 1400, 'dark', { ar: 'ناسج الكسوف', en: 'Eclipse Weaver' },
+    { ar: 'عند استدعائه مكشوفاً: حوّل وحشاً مكشوفاً للخصم من الهجوم إلى الدفاع.', en: 'When summoned face-up: switch 1 face-up opposing attack-position monster to defense.' }, { on: 'summon', op: 'toDef' }),
+  astralSpear: S('equip', { op: 'equip', atk: 700 }, { ar: 'رمح النجوم', en: 'Astral Spear' },
+    { ar: 'جهّز به وحشاً مكشوفاً لك: يكسب 700 هجوم.', en: 'Equip to 1 of your face-up monsters: it gains 700 ATK.' }),
+  twilightPulse: S('normal', { op: 'burnPer', n: 400 }, { ar: 'نبضة الشفق', en: 'Twilight Pulse' },
+    { ar: 'الخصم يخسر 400 نقطة عن كل وحش يتحكم به.', en: 'Your opponent loses 400 LP for each monster they control.' }),
+  renewalSpring: S('normal', { op: 'heal', n: 1500 }, { ar: 'نبع التجدد', en: 'Renewal Spring' },
+    { ar: 'تكسب 1500 نقطة حياة.', en: 'Gain 1500 LP.' }),
+  sanctuaryVeil: T('attack', { op: 'negateHeal', n: 500 }, { ar: 'ستار الملاذ', en: 'Sanctuary Veil' },
+    { ar: 'عندما يهاجم وحش الخصم: ألغِ الهجوم وتكسب 500 نقطة حياة.', en: 'When an opposing monster attacks: negate the attack and gain 500 LP.' }),
+  gravitySnare: T('attack', { op: 'deflect' }, { ar: 'شرك الجاذبية', en: 'Gravity Snare' },
+    { ar: 'عندما يهاجم وحش الخصم: ألغِ الهجوم وحوّل المهاجم إلى الدفاع.', en: 'When an opposing monster attacks: negate the attack and switch the attacker to defense.' }),
+  titanSeal: T('summon', { op: 'destroySummoned' }, { ar: 'ختم العمالقة', en: 'Titan Seal' },
+    { ar: 'عندما يستدعي الخصم وحشاً هجومه 2400 أو أكثر: دمّره.', en: 'When your opponent summons a monster with at least 2400 ATK: destroy it.' }, 2400),
   emberFox: M(3, 1400, 800, 'fire', { ar: 'ثعلب الجمر', en: 'Ember Fox' },
     { ar: 'يترك أثراً من الشرر أينما ركض.', en: 'Leaves a trail of sparks wherever it runs.' }),
   graniteSentinel: M(4, 1300, 2000, 'earth', { ar: 'حارس الجرانيت', en: 'Granite Sentinel' },
@@ -176,6 +200,10 @@ SD.CARDS = {
 
 /* Decks: 40 cards each, written as [card id, copies]. "starter" is also the tutorial deck. */
 SD.DECKS = {
+  eclipse: { name: { ar: 'حراس الكسوف', en: 'Eclipse Wardens' }, list: [
+    ['cometDrake', 2], ['glacierOwl', 3], ['rootWarden', 3], ['skyMantis', 3], ['auroraLion', 2], ['eclipseWeaver', 3],
+    ['scrollKeeper', 2], ['emberFox', 2], ['astralSpear', 2], ['twilightPulse', 2], ['renewalSpring', 2],
+    ['kindle', 2], ['shatter', 2], ['recall', 2], ['sanctuaryVeil', 3], ['gravitySnare', 3], ['titanSeal', 2]] },
   starter: { name: { ar: 'المتوازنة', en: 'Balanced' }, list: [
     ['emberFox', 2], ['graniteSentinel', 2], ['tideDancer', 2], ['galeLancer', 2], ['duskBlade', 2], ['mossTurtle', 2],
     ['lanternWisp', 1], ['scrollKeeper', 2], ['rustMoth', 1], ['mirrorLurker', 2], ['cinderHound', 2],

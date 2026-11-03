@@ -187,6 +187,15 @@
       <g class="a-pulse"><circle class="gl" cx="45.5" cy="37" r="2.2"/><circle class="gl" cx="54.5" cy="37" r="2.2"/></g><path class="wh" d="M45 43L46.5 50L48 43ZM52 43L53.5 50L55 43Z"/><path class="st" style="stroke-width:2" d="M46 70V78M54 70V78"/>`
   };
 
+  Object.assign(SD.MONSTER_ART, {
+    cometDrake: `<path class="gl a-flick" d="M8 86L18 43L35 67L25 28L50 61Z" opacity=".7"/><g class="a-flap"><path class="m2" d="M44 50L14 8L18 48L8 60L40 64ZM58 48L89 10L85 49L96 62L62 65Z"/></g><path class="m1" d="M34 83L39 47L52 32L70 40L61 51L66 81L51 94Z"/><path class="m3" d="M42 36L40 18L53 31L65 20L64 38Z"/>${eyes(49,59,42,2)}<path class="wh" d="M51 55L56 62L60 54Z"/>`,
+    glacierOwl: `<g class="a-flap"><path class="m3" d="M33 48L6 34L13 72L36 66ZM67 48L94 34L87 72L64 66Z"/></g><ellipse class="m1" cx="50" cy="62" rx="24" ry="29"/><path class="m2" d="M25 36L27 10L44 28H56L73 10L75 36Z"/><circle class="wh" cx="39" cy="43" r="13"/><circle class="wh" cx="61" cy="43" r="13"/>${eyes(39,61,43,4)}<path class="gl" d="M45 53L50 63L55 53Z"/><path class="st" d="M36 86L32 95M42 88L43 96M58 88L57 96M64 86L68 95"/>`,
+    rootWarden: `<path class="m2 a-sway" d="M29 47L12 33L8 15L17 25L24 12L23 34L38 43ZM68 43L80 24L78 9L87 20L97 12L91 34L76 55Z"/><path class="m1" d="M31 36Q50 24 69 36L73 79L88 95L63 88L50 99L38 88L12 95L28 76Z"/><path class="m3" d="M33 35L25 25L44 27L51 13L61 28L77 25L68 39Z"/>${eyes(41,59,48,3)}<path class="st" d="M40 66Q50 72 60 66M43 80L41 92M59 78L63 91"/>`,
+    skyMantis: `<g class="a-flap" opacity=".7"><path class="m3" d="M45 47Q2 5 9 60L43 64ZM55 47Q98 5 91 60L57 64Z"/></g><path class="st" d="M43 69L23 85L19 97M57 69L77 85L81 97M44 42L17 32L25 12M56 42L83 32L75 12"/><ellipse class="m1" cx="50" cy="64" rx="10" ry="25"/><path class="m2" d="M32 25L50 15L68 25L50 43Z"/>${eyes(41,59,26,3)}<path class="gl" d="M49 45H51V82H49Z"/>`,
+    auroraLion: `<circle class="gl a-pulse" cx="50" cy="42" r="36" opacity=".25"/><path class="m2" d="M24 50L12 31L25 24L27 10L44 16L55 6L65 19L82 18L78 35L91 48L72 61L28 65Z"/><path class="m1" d="M28 52H72L77 90H63L59 70H41L37 90H23Z"/><path class="m3" d="M29 30Q50 18 71 30L66 53L50 66L34 53Z"/>${eyes(40,60,38,3)}<path class="dk" d="M44 47H56L50 54Z"/><path class="st" d="M50 54L43 59M50 54L57 59"/>`,
+    eclipseWeaver: `<circle class="m3" cx="50" cy="23" r="20" opacity=".5"/><circle class="dk" cx="58" cy="18" r="17"/><path class="m2" d="M22 96L30 53L50 36L70 53L78 96Z"/><path class="m1" d="M35 52L50 29L65 52L60 73H40Z"/><path class="dk" d="M39 49L50 40L61 49L58 62H42Z"/>${eyes(45,55,53,2)}<g class="a-pulse"><path class="gl" d="M12 50L18 60L12 70L6 60ZM88 50L94 60L88 70L82 60Z"/><path class="st" d="M18 60L40 73L50 87L60 73L82 60"/></g>`
+  });
+
   SD.art = function (id, color) {
     const mon = SD.MONSTER_ART[id];
     if (!mon) return `<svg viewBox="0 0 100 100" class="mon" aria-hidden="true"><g class="a-spin">${seal(id, color)}</g></svg>`;
