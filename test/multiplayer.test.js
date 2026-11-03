@@ -63,7 +63,7 @@ test('trap decisions are private, validated, and resolve through the server', as
   const after = await defender.next('state', m => !m.state.busy); assert.equal(after.state.P[0].lp, SD.START_LP + 500); assert.equal(after.state.P[0].gy.at(-1).id, 'sanctuaryVeil');
 });
 
-test('reconnect restores the same hand and pending choice without giving a third seat', async t => {
+test('reconnect restores the same hand without giving a third seat', async t => {
   const { a, b, room, joined, client } = await setup(t);
   const original = room.game.P[0].hand.map(c => c.uid);
   a.ws.close(); await once(a.ws, 'close');
@@ -71,6 +71,21 @@ test('reconnect restores the same hand and pending choice without giving a third
   const restored = await client(); restored.send({ type: 'resume', code: joined.code, token: joined.token }); await restored.next('joined');
   const state = (await restored.next('state')).state;
   assert.deepEqual(state.P[0].hand.map(c => c.uid), [...original]); assert.equal(room.players.length, 2);
+});
+
+test('a pending trap survives refresh and rejects a replayed answer', async t => {
+  const { a, b, room, joined, client } = await setup(t), g = room.game;
+  g.turn = 1; g.turnCount = 3; g.phase = 'battle';
+  const attacker = g.P[1].hand.shift(); attacker.id = 'emberFox'; g.P[1].m[0] = attacker;
+  const trap = g.P[0].hand.shift(); trap.id = 'gravitySnare'; trap.faceDown = true; trap.setTurn = 1; g.P[0].st[0] = trap;
+  b.send({ type: 'action', action: 'direct', uid: attacker.uid });
+  const original = await a.next('prompt');
+  a.ws.close(); await once(a.ws, 'close'); await b.next('state', m => !m.state.opponentConnected);
+  const restored = await client(); restored.send({ type: 'resume', code: joined.code, token: joined.token });
+  const pending = await restored.next('prompt'); assert.equal(pending.id, original.id);
+  restored.send({ type: 'answer', id: pending.id, value: true });
+  const done = await restored.next('state', m => !m.state.busy); assert.equal(done.state.P[1].m[0].pos, 'def');
+  restored.send({ type: 'answer', id: pending.id, value: true }); assert.equal((await restored.next('error')).code, 'invalid');
 });
 
 test('all six decks contain 40 valid cards; new traps and ownership checks follow rules', async () => {
