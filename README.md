@@ -1,72 +1,66 @@
 # مبارزة الأختام · Sigil Duel
 
-لعبة أوراق مبارزة على المتصفح بأوراق ورسومات أصلية: لعب مع صديق بروم وكود، وضع تعليمي بمدرّب، مبارزة ضد الكمبيوتر، ومكتبة أوراق. عربي وإنجليزي.
+لعبة أوراق أصلية بالعربي والإنجليزي: مبارزة مع صاحبك بالكود، لعب ضد الكمبيوتر، تدريب، و6 مجموعات من بينها «حراس الكسوف» بوحوش وسحر وأفخاخ جديدة.
 
-A browser card-duel game with original cards and art: private two-player rooms, a coached tutorial, a duel against the computer, and a card library. Arabic and English.
+## العب من اللينك
 
-## التشغيل · Run
+افتح https://baya3elward019.github.io/Cards-game/ من جهازك أو موبايلك. **لا تحتاج تثبيت Node أو تشغيل سيرفر محلي.**
 
-للعب الفردي فقط: افتح `index.html` في المتصفح. لا يوجد build.
-Offline solo play: open `index.html` in a browser. No build step.
+1. اضغط **العب مع صاحبك** واختار مجموعة الكروت.
+2. اضغط **إنشاء روم**، وانتظر ظهور الكود.
+3. ابعت رابط الدعوة أو الكود المكوّن من 10 حروف وأرقام لصاحبك.
+4. صاحبك يفتح اللينك، يختار مجموعته ويضغط **دخول الروم**. رابط الدعوة يملأ الكود تلقائياً.
+5. المباراة تبدأ تلقائياً عند دخول اللاعب الثاني، والبادئ بالقرعة.
 
-### اللعب مع صديق · Multiplayer
+**صاحب الروم لازم يسيب الصفحة مفتوحة طول المباراة.** إغلاق صفحته أو تحديثها ينهي الروم. الضيف يقدر يحدث صفحته ويرجع بنفس التبويب خلال دقيقة، طالما صاحب الروم موجود. حافظوا على الصفحة نشطة؛ بعض الموبايلات توقف الاتصال عند قفل الشاشة أو تعليق المتصفح.
 
-ثبّت Node.js 22 أو أحدث، ثم من مجلد اللعبة:
+## النشر على GitHub Pages
+
+Settings → Pages → Deploy from a branch → **main / (root)** → Save.
+
+الواجهة والرومات تعمل من الموقع الثابت نفسه، من غير build أو مفاتيح API أو خدمة Node خاصة. مكتبة MQTT مرفقة في المستودع، فلا يلزم تحميلها من CDN أثناء اللعب.
+
+## كيف يعمل الاتصال؟
+
+متصفح صاحب الروم يشغّل محرك القواعد، ويراجع الأدوار والحركات واختيارات الأفخاخ والتضحيات والأهداف. يرسل لكل لاعب العرض الخاص به، ويخفي يد الخصم والكروت المقلوبة وترتيب المجموعات عن واجهة الضيف. خدمات MQTT العامة من EMQX وHiveMQ وMosquitto تنقل الرسائل؛ الاتصال يتم بالخدمات الثلاث لتجاوز تعطل إحداها، والرسائل المكررة لا تكرر الحركة.
+
+بيانات المباراة مشفرة بـ AES-GCM قبل إرسالها، بمفتاح مشتق من كود عشوائي من 10 خانات. شارك الكود مع صاحبك فقط: من يعرفه يملك مفتاح الروم. صاحب الروم يدير الحالة الكاملة في متصفحه، لذا هذا الوضع مناسب للعب الودي وليس للتحكيم المحايد في المسابقات. الخدمات العامة قد تتعطل أو تفرض حدوداً؛ لا يوجد ضمان توافر لها.
+
+مهلة اختيار هدف أو تضحية أو تفعيل فخ دقيقتان، وبعدها يخسر اللاعب المتأخر. إذا انقطع الضيف ينتظره صاحب الروم حتى دقيقة. لا تُحفظ المباراة على سيرفر، ولا يوجد انتقال تلقائي للاستضافة إلى الضيف عند خروج صاحب الروم.
+
+## English
+
+Open the GitHub Pages link, choose **Play with a friend**, select a deck, create a room, and share its code or invite link. **No local server, installation, account, or API key is required.**
+
+The creator's browser runs the shared rules engine. Public MQTT brokers relay encrypted per-player views and commands. Keep the host page open; refreshing or closing it ends the room. The guest can refresh and resume in the same tab within 60 seconds. Card choices time out after two minutes. Broker availability is external; this is a friendly host-trusted game, not a neutral tournament server. Anyone with the invite code has the room key.
+
+## التطوير والاختبارات · Development
+
+للعب الفردي بدون اتصال، افتح index.html مباشرة. لاختبار التعديلات محلياً فقط، يمكن استخدام أي سيرفر ملفات ثابتة أو:
 
 ```sh
 npm ci
 npm start
-```
-
-افتح `http://localhost:3000`، واضغط **العب مع صاحبك**، واختار المجموعة ثم **إنشاء روم**. ابعت الكود أو رابط الدعوة لصاحبك. هو يفتح نفس السيرفر، يختار مجموعته ويضغط **دخول الروم**. رابط الدعوة يملأ الكود تلقائياً. تبدأ المباراة عند دخول اللاعب الثاني، والبادئ بالقرعة.
-
-للتجربة على نفس الجهاز افتح تبويبين مستقلين. على نفس شبكة Wi-Fi استخدم عنوان الجهاز المحلي بدل `localhost` في الجهازين، مثل `http://192.168.1.10:3000` (استبدله بعنوان جهازك الفعلي). رابط `localhost` لا يصلح لصاحبك على جهاز آخر.
-
-For multiplayer, run the Node server and open its URL. Choose **Play with a friend**, select a deck, then create or join a room. Invite links prefill the six-character code. Both players must use the same server. `localhost` only works on the server's own computer.
-
-السيرفر يراجع كل حركة، ويخفي يد الخصم والكروت المقلوبة وترتيب المجموعات. يمكن الرجوع لنفس المباراة في نفس التبويب بعد تحديث الصفحة أو انقطاع الاتصال خلال 60 ثانية. مهلة اختيارات الفخاخ والأهداف والتضحيات دقيقتان؛ تجاوز المهلة خسارة. الغرف مؤقتة في الذاكرة: إعادة تشغيل السيرفر تمسحها، وتنتهي بحد أقصى بعد 4 ساعات. زر «مبارزة جديدة» بعد النهاية يرجعك لإنشاء/دخول روم جديدة.
-
-The server owns the rules and hidden information. Refresh/reconnect in the same tab within 60 seconds to resume. Pending card choices time out after two minutes and forfeit the duel. Rooms are in memory, expire after at most four hours, and do not survive server restarts. Run a single server instance (no multi-instance scaling without shared room storage/routing).
-
-### نشر اللعب الجماعي · Hosting multiplayer
-
-انشر المشروع كخدمة Node أو Docker تدعم WebSocket، بأمر تثبيت `npm ci` وتشغيل `npm start`. السيرفر يستخدم متغير `PORT` الذي توفره الاستضافة (الافتراضي 3000)، ويقدم الواجهة واتصال `/ws` معاً. فعّل HTTPS على الاستضافة؛ الواجهة تستخدم WSS تلقائياً. شارك رابط الاستضافة مع صاحبك. ملف `Dockerfile` جاهز لمنصة تدعم الحاويات.
-
-Deploy as a Node or Docker web service supporting WebSockets. Install: `npm ci`; start: `npm start`; listen port: `PORT` (default 3000). Serve the frontend and `/ws` on the same origin; use HTTPS/WSS in production. No database or API keys are needed. A public server has **not** been provisioned by adding these files.
-
-**GitHub Pages يشغّل اللعب الفردي فقط؛ لا يشغّل سيرفر الرومات.**
-
-### الإضافة الجديدة · Eclipse Wardens
-
-12 ورقة جديدة بنفس تنسيق الأوراق القديمة: 6 وحوش برسومات SVG متحركة، 3 سحر، 3 أفخاخ. مجموعة **حراس الكسوف** تضم 40 ورقة ومتاحة في اللعب الفردي والجماعي. «ستار الملاذ» يلغي الهجوم ويشفي 500، و«شرك الجاذبية» يلغي الهجوم ويحوّل المهاجم للدفاع. إجمالي المجموعات: 6.
-
-### الاختبارات · Tests
-
-```sh
 npm test
 ```
 
-Tests use two real WebSocket clients against an ephemeral local server: room admission, private views, turn/ownership validation, trap decisions, reconnection, deck integrity, and new trap effects.
+افتح http://localhost:3000 للتطوير. الرومات حتى في المعاينة المحلية تتصل بخدمات MQTT العامة، وليس بمسار /ws. السيرفر القديم وDockerfile موجودان كأدوات تطوير؛ وجودهما ليس شرطاً لتشغيل اللعبة المنشورة.
 
-## الرفع على GitHub Pages · Deploy
-
-1. أنشئ مستودعاً جديداً وارفع كل الملفات كما هي (`index.html` في الجذر).
-2. Settings → Pages → Source: **Deploy from a branch** → `main` / `(root)` → Save.
-3. بعد دقيقة تعمل اللعبة على `https://<username>.github.io/<repo>/`.
+Tests cover encrypted browser-relay transport with duplicate delivery, private views, two-seat admission, guest resume, turn and trap validation, and the original server engine. Vendored MQTT.js 5.15.1 is under MIT; see MQTT-LICENSE.md. To update the bundle, update the npm dependency and copy node_modules/mqtt/dist/mqtt.min.js to js/mqtt.min.js, keeping its license.
 
 ## الملفات · Files
 
-| File | ماذا فيه |
+| File | الوظيفة |
 |---|---|
-| `js/cards.js` | كل الأوراق والمجموعات الست (`SD.DECKS`). أضف أو عدّل الأوراق هنا |
-| `server.js` | سيرفر الرومات، مراجعة الحركات وإخفاء معلومات الخصم |
-| `js/online-text.js` | نصوص اللعب الجماعي بالعربي والإنجليزي |
-| `js/i18n.js` | كل نصوص الواجهة بالعربي والإنجليزي |
-| `js/engine.js` | القواعد: المراحل، الاستدعاء، المعركة، السحر والفخاخ |
-| `js/ai.js` | الخصم الآلي (سهل / عادي) |
-| `js/ui.js` | الشاشات، الساحة، المدرّب |
-| `js/art.js` | رسم الأختام تلقائياً من اسم الورقة |
-| `css/style.css` | التصميم والألوان (المتغيرات في أول الملف) |
+| js/cards.js | الأوراق والمجموعات الست، كل مجموعة 40 ورقة |
+| js/art.js | رسومات الوحوش والأختام |
+| js/engine.js | محرك القواعد المشترك |
+| js/host-room.js | إدارة المباراة واختيارات اللاعبين داخل متصفح صاحب الروم |
+| js/room-network.js | التشفير والاتصال والرومات وإعادة إرسال الرسائل |
+| js/mqtt.min.js | مكتبة MQTT.js المرفقة |
+| js/ui.js | الواجهة والساحة والتدريب |
+| js/online-text.js | نصوص الرومات بالعربي والإنجليزي |
+| css/style.css | التصميم |
 
 ### إضافة ورقة · Add a card
 
